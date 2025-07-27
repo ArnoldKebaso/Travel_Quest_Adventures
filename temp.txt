@@ -1,0 +1,4393 @@
+import React, { useState } from 'react';
+import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Label } from './ui/label';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from './ui/breadcrumb';
+import { ChevronRight, Upload, ImageIcon } from 'lucide-react';
+import { toast } from 'sonner';
+
+type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users';
+
+interface AdminAddGuideProps {
+  onNavigate: (page: Page) => void;
+}
+
+interface FormData {
+  title: string;
+  content: string;
+  region: string;
+  category: string;
+  imageUrl: string;
+}
+
+interface FormErrors {
+  title?: string;
+  content?: string;
+  region?: string;
+  category?: string;
+}
+
+export function AdminAddGuide({ onNavigate }: AdminAddGuideProps) {
+  const [formData, setFormData] = useState<FormData>({
+    title: '',
+    content: '',
+    region: '',
+    category: '',
+    imageUrl: '',
+  });
+
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!formData.title.trim()) {
+      newErrors.title = 'Title is required';
+    }
+
+    if (!formData.content.trim()) {
+      newErrors.content = 'Content is required';
+    } else if (formData.content.trim().length < 50) {
+      newErrors.content = 'Content must be at least 50 characters';
+    }
+
+    if (!formData.region) {
+      newErrors.region = 'Region is required';
+    }
+
+    if (!formData.category) {
+      newErrors.category = 'Category is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (field: keyof FormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const handleImageUrlChange = (url: string) => {
+    handleInputChange('imageUrl', url);
+    if (url) {
+      setImagePreview(url);
+    }
+  };
+
+  const handleImageUpload = () => {
+    // Simulate image upload with a placeholder
+    const placeholderUrl = `https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&h=600&fit=crop`;
+    handleImageUrlChange(placeholderUrl);
+    toast.success('Image uploaded successfully');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast.success('Travel guide created successfully!');
+      onNavigate('admin-dashboard');
+    } catch (error) {
+      toast.error('Failed to create travel guide');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const isFormValid = formData.title && formData.content && formData.region && formData.category;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <div className="mb-6">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink 
+                  onClick={() => onNavigate('admin-dashboard')}
+                  className="cursor-pointer text-orange-600 hover:text-orange-700"
+                >
+                  Admin
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator>
+                <ChevronRight className="w-4 h-4" />
+              </BreadcrumbSeparator>
+              <BreadcrumbItem>
+                <BreadcrumbLink 
+                  onClick={() => onNavigate('admin-dashboard')}
+                  className="cursor-pointer text-orange-600 hover:text-orange-700"
+                >
+                  Content
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator>
+                <ChevronRight className="w-4 h-4" />
+              </BreadcrumbSeparator>
+              <BreadcrumbItem>
+                <BreadcrumbPage className="text-gray-500">Add New Travel Guide</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900">Add New Travel Guide</h1>
+          <p className="text-gray-600 mt-2">Create engaging travel content for your users</p>
+        </div>
+
+        {/* Form Card */}
+        <Card className="bg-white shadow-sm border-gray-200">
+          <CardHeader className="border-b border-gray-200">
+            <CardTitle className="text-xl font-bold text-gray-900">Guide Details</CardTitle>
+          </CardHeader>
+          <CardContent className="p-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Title */}
+              <div className="space-y-2">
+                <Label htmlFor="title" className="text-sm font-medium text-gray-900">
+                  Title *
+                </Label>
+                <Input
+                  id="title"
+                  type="text"
+                  placeholder="e.g. 'Great Barrier Reef Diving Guide'"
+                  value={formData.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  className={errors.title ? 'border-red-500' : ''}
+                />
+                {errors.title && (
+                  <p className="text-sm text-red-600">{errors.title}</p>
+                )}
+              </div>
+
+              {/* Content */}
+              <div className="space-y-2">
+                <Label htmlFor="content" className="text-sm font-medium text-gray-900">
+                  Content / Description *
+                </Label>
+                <Textarea
+                  id="content"
+                  placeholder="Write your comprehensive travel guide here..."
+                  value={formData.content}
+                  onChange={(e) => handleInputChange('content', e.target.value)}
+                  className={`min-h-[240px] ${errors.content ? 'border-red-500' : ''}`}
+                  rows={8}
+                />
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>{errors.content && <span className="text-red-600">{errors.content}</span>}</span>
+                  <span>{formData.content.length} characters</span>
+                </div>
+              </div>
+
+              {/* Region and Category Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="region" className="text-sm font-medium text-gray-900">
+                    Region *
+                  </Label>
+                  <Select value={formData.region} onValueChange={(value) => handleInputChange('region', value)}>
+                    <SelectTrigger className={errors.region ? 'border-red-500' : ''}>
+                      <SelectValue placeholder="Select region" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="NSW">New South Wales</SelectItem>
+                      <SelectItem value="VIC">Victoria</SelectItem>
+                      <SelectItem value="QLD">Queensland</SelectItem>
+                      <SelectItem value="WA">Western Australia</SelectItem>
+                      <SelectItem value="SA">South Australia</SelectItem>
+                      <SelectItem value="TAS">Tasmania</SelectItem>
+                      <SelectItem value="NT">Northern Territory</SelectItem>
+                      <SelectItem value="ACT">Australian Capital Territory</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.region && (
+                    <p className="text-sm text-red-600">{errors.region}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="category" className="text-sm font-medium text-gray-900">
+                    Category *
+                  </Label>
+                  <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+                    <SelectTrigger className={errors.category ? 'border-red-500' : ''}>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Guide">Travel Guide</SelectItem>
+                      <SelectItem value="Blog Post">Blog Post</SelectItem>
+                      <SelectItem value="Video">Video Content</SelectItem>
+                      <SelectItem value="Tour Info">Tour Information</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.category && (
+                    <p className="text-sm text-red-600">{errors.category}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Image Section */}
+              <div className="space-y-4">
+                <Label className="text-sm font-medium text-gray-900">Featured Image</Label>
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1 space-y-2">
+                    <Input
+                      type="url"
+                      placeholder="https://example.com/image.jpg"
+                      value={formData.imageUrl}
+                      onChange={(e) => handleImageUrlChange(e.target.value)}
+                    />
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={handleImageUpload}
+                    className="cursor-pointer"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Image
+                  </Button>
+                </div>
+                
+                {/* Image Preview */}
+                {imagePreview && (
+                  <div className="mt-4">
+                    <div className="w-full max-w-md mx-auto md:mx-0">
+                      <img 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                        onError={() => setImagePreview(null)}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {!imagePreview && (
+                  <div className="w-full max-w-md mx-auto md:mx-0 h-48 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
+                    <div className="text-center">
+                      <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">Image preview will appear here</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-gray-200">
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  onClick={() => onNavigate('admin-dashboard')}
+                  className="cursor-pointer"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={!isFormValid || isSubmitting}
+                  className="bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {isSubmitting ? 'Creating...' : 'Save Guide'}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+import React from 'react';
+import { Auth } from './Auth';
+
+interface AdminAuthProps {
+  onAuthSuccess?: () => void;
+}
+
+export function AdminAuth({ onAuthSuccess }: AdminAuthProps) {
+  return <Auth isAdminAuth={true} onAuthSuccess={onAuthSuccess} />;
+}
+import React, { useState } from 'react';
+import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Input } from './ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
+import { Checkbox } from './ui/checkbox';
+import { Avatar, AvatarFallback } from './ui/avatar';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from './ui/pagination';
+import { Search, Check, Trash2, MessageCircle, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
+
+type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users';
+
+interface AdminCommentModerationProps {
+  onNavigate: (page: Page) => void;
+}
+
+interface Comment {
+  id: string;
+  excerpt: string;
+  fullContent: string;
+  destination: string;
+  destinationId: string;
+  user: {
+    name: string;
+    email: string;
+    avatar?: string;
+  };
+  date: string;
+  status: 'Pending' | 'Approved' | 'Flagged';
+}
+
+export function AdminCommentModeration({ onNavigate }: AdminCommentModerationProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedComments, setSelectedComments] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Mock data for demonstration
+  const allComments: Comment[] = [
+    {
+      id: '1',
+      excerpt: 'Amazing experience diving at the Great Barrier Reef! The coral formations were...',
+      fullContent: 'Amazing experience diving at the Great Barrier Reef! The coral formations were absolutely breathtaking, and we saw so many different species of fish. The water was crystal clear and the guides were very knowledgeable.',
+      destination: 'Great Barrier Reef',
+      destinationId: 'gbr-1',
+      user: { name: 'Sarah Johnson', email: 'sarah@example.com' },
+      date: '2024-01-15',
+      status: 'Approved'
+    },
+    {
+      id: '2',
+      excerpt: 'This place is overrated and not worth the money. The service was terrible...',
+      fullContent: 'This place is overrated and not worth the money. The service was terrible and the staff were rude. I would not recommend this to anyone.',
+      destination: 'Sydney Opera House',
+      destinationId: 'soh-1',
+      user: { name: 'Mike Chen', email: 'mike@example.com' },
+      date: '2024-01-14',
+      status: 'Flagged'
+    },
+    {
+      id: '3',
+      excerpt: 'Perfect spot for sunrise photography! Highly recommend getting there early...',
+      fullContent: 'Perfect spot for sunrise photography! Highly recommend getting there early to get the best shots. The colors of Uluru at sunrise are truly spectacular.',
+      destination: 'Uluru',
+      destinationId: 'uluru-1',
+      user: { name: 'Emma Wilson', email: 'emma@example.com' },
+      date: '2024-01-13',
+      status: 'Pending'
+    },
+    {
+      id: '4',
+      excerpt: 'The coffee tour was fantastic! Learned so much about Melbourne\'s coffee culture...',
+      fullContent: 'The coffee tour was fantastic! Learned so much about Melbourne\'s coffee culture and got to taste some amazing brews. The guide was very passionate and knowledgeable.',
+      destination: 'Melbourne',
+      destinationId: 'mel-1',
+      user: { name: 'David Brown', email: 'david@example.com' },
+      date: '2024-01-12',
+      status: 'Approved'
+    },
+    {
+      id: '5',
+      excerpt: 'Had an incredible time exploring Tasmania! The wildlife was amazing...',
+      fullContent: 'Had an incredible time exploring Tasmania! The wildlife was amazing and we were lucky enough to see Tasmanian devils in their natural habitat. The scenery is breathtaking.',
+      destination: 'Tasmania',
+      destinationId: 'tas-1',
+      user: { name: 'Lisa Anderson', email: 'lisa@example.com' },
+      date: '2024-01-11',
+      status: 'Pending'
+    },
+  ];
+
+  const filteredComments = allComments.filter(comment => {
+    const matchesSearch = 
+      comment.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      comment.destination.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      comment.user.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || comment.status.toLowerCase() === statusFilter.toLowerCase();
+    return matchesSearch && matchesStatus;
+  });
+
+  const totalPages = Math.ceil(filteredComments.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedComments = filteredComments.slice(startIndex, startIndex + itemsPerPage);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedComments(paginatedComments.map(comment => comment.id));
+    } else {
+      setSelectedComments([]);
+    }
+  };
+
+  const handleSelectComment = (commentId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedComments(prev => [...prev, commentId]);
+    } else {
+      setSelectedComments(prev => prev.filter(id => id !== commentId));
+    }
+  };
+
+  const handleApprove = (commentId: string) => {
+    toast.success('Comment approved successfully');
+    // Here you would update the comment status in your backend
+  };
+
+  const handleDelete = (commentId: string) => {
+    toast.success('Comment deleted successfully');
+    // Here you would delete the comment from your backend
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedComments.length === 0) return;
+    toast.success(`${selectedComments.length} comments deleted successfully`);
+    setSelectedComments([]);
+    // Here you would delete the selected comments from your backend
+  };
+
+  const getBadgeColor = (status: string) => {
+    switch (status) {
+      case 'Approved':
+        return 'bg-green-100 text-green-700 border-green-200';
+      case 'Pending':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'Flagged':
+        return 'bg-red-100 text-red-700 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
+  const flaggedCount = allComments.filter(c => c.status === 'Flagged').length;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Moderate Comments</h1>
+          <p className="text-gray-600">Review and manage user comments and reviews</p>
+          {flaggedCount > 0 && (
+            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-700">
+                <span className="font-medium">{flaggedCount}</span> comments need your attention
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Main Card */}
+        <Card className="bg-white shadow-sm border-gray-200">
+          <CardHeader className="border-b border-gray-200">
+            <CardTitle className="text-xl font-bold text-gray-900">Comments & Reviews</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search by destination, user, or content..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Comments</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="flagged">Flagged</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Bulk Actions */}
+            {selectedComments.length > 0 && (
+              <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-orange-700">
+                    {selectedComments.length} comment{selectedComments.length > 1 ? 's' : ''} selected
+                  </span>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleBulkDelete}
+                    className="cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Bulk Delete
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Comments Table */}
+            {paginatedComments.length > 0 ? (
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader className="bg-gray-50">
+                    <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={selectedComments.length === paginatedComments.length}
+                          onCheckedChange={handleSelectAll}
+                        />
+                      </TableHead>
+                      <TableHead className="font-medium text-gray-900">Comment</TableHead>
+                      <TableHead className="font-medium text-gray-900">Destination</TableHead>
+                      <TableHead className="font-medium text-gray-900">User</TableHead>
+                      <TableHead className="font-medium text-gray-900">Date</TableHead>
+                      <TableHead className="font-medium text-gray-900">Status</TableHead>
+                      <TableHead className="font-medium text-gray-900 text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedComments.map((comment) => (
+                      <TableRow key={comment.id} className="border-gray-200">
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedComments.includes(comment.id)}
+                            onCheckedChange={(checked) => handleSelectComment(comment.id, !!checked)}
+                          />
+                        </TableCell>
+                        <TableCell className="max-w-xs">
+                          <p className="text-sm text-gray-900 truncate" title={comment.fullContent}>
+                            {comment.excerpt}
+                          </p>
+                        </TableCell>
+                        <TableCell>
+                          <button
+                            onClick={() => {
+                              // Navigate to destination detail
+                              toast.info('Navigate to destination detail');
+                            }}
+                            className="text-orange-600 hover:text-orange-700 cursor-pointer flex items-center gap-1"
+                          >
+                            {comment.destination}
+                            <ExternalLink className="w-3 h-3" />
+                          </button>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback className="bg-orange-100 text-orange-700 text-xs">
+                                {comment.user.name.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{comment.user.name}</p>
+                              <p className="text-xs text-gray-500">{comment.user.email}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-600">
+                          {new Date(comment.date).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getBadgeColor(comment.status)}>
+                            {comment.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            {comment.status !== 'Approved' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleApprove(comment.id)}
+                                className="cursor-pointer text-green-600 hover:text-green-700 hover:bg-green-50"
+                              >
+                                <Check className="w-4 h-4" />
+                              </Button>
+                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDelete(comment.id)}
+                              className="cursor-pointer text-destructive hover:text-destructive-foreground hover:bg-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500 mb-2">No comments found</p>
+                <p className="text-sm text-gray-400">
+                  {searchTerm || statusFilter !== 'all' 
+                    ? 'Try adjusting your filters' 
+                    : 'Comments will appear here when users start reviewing destinations'
+                  }
+                </p>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-6 flex justify-center">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                        className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const page = i + 1;
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(page)}
+                            isActive={currentPage === page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    })}
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                        className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+import React, { useState } from 'react';
+import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Input } from './ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
+import { Edit, Trash2, Plus, Search, FileText, Video, BookOpen } from 'lucide-react';
+
+type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users';
+
+interface AdminDashboardProps {
+  onNavigate: (page: Page) => void;
+}
+
+interface ContentItem {
+  id: string;
+  title: string;
+  type: 'Guide' | 'Blog' | 'Video';
+  region: string;
+  lastUpdated: string;
+}
+
+export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [regionFilter, setRegionFilter] = useState('all');
+
+  // Mock data for demonstration
+  const stats = [
+    { label: 'Total Posts', value: 10, icon: FileText },
+    { label: 'Guides', value: 7, icon: BookOpen },
+    { label: 'Videos', value: 3, icon: Video },
+  ];
+
+  const contentItems: ContentItem[] = [
+    { id: '1', title: 'Great Barrier Reef Diving Guide', type: 'Guide', region: 'QLD', lastUpdated: '2024-01-15' },
+    { id: '2', title: 'Sydney Harbour Bridge Climb Experience', type: 'Blog', region: 'NSW', lastUpdated: '2024-01-12' },
+    { id: '3', title: 'Melbourne Coffee Culture Tour', type: 'Video', region: 'VIC', lastUpdated: '2024-01-10' },
+    { id: '4', title: 'Uluru Sunrise Photography Tips', type: 'Guide', region: 'NT', lastUpdated: '2024-01-08' },
+    { id: '5', title: 'Tasmania Devil Island Adventure', type: 'Guide', region: 'TAS', lastUpdated: '2024-01-05' },
+    { id: '6', title: 'Perth Beach Hopping Guide', type: 'Blog', region: 'WA', lastUpdated: '2024-01-03' },
+  ];
+
+  const filteredContent = contentItems.filter(item => {
+    const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = typeFilter === 'all' || item.type.toLowerCase() === typeFilter.toLowerCase();
+    const matchesRegion = regionFilter === 'all' || item.region === regionFilter;
+    return matchesSearch && matchesType && matchesRegion;
+  });
+
+  const getBadgeVariant = (type: string) => {
+    switch (type) {
+      case 'Guide':
+        return 'default';
+      case 'Blog':
+        return 'secondary';
+      case 'Video':
+        return 'outline';
+      default:
+        return 'secondary';
+    }
+  };
+
+  const getBadgeColor = (type: string) => {
+    switch (type) {
+      case 'Guide':
+        return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'Blog':
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'Video':
+        return 'bg-blue-100 text-blue-700 border-blue-200';
+      default:
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Admin Dashboard – Manage Travel Content</h1>
+          <p className="text-gray-600">Manage your travel guides, blogs, and video content</p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {stats.map((stat, index) => (
+            <Card key={index} className="bg-white shadow-sm border-gray-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">{stat.label}</p>
+                    <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <stat.icon className="w-6 h-6 text-orange-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Content Management */}
+        <Card className="bg-white shadow-sm border-gray-200">
+          <CardHeader className="border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <CardTitle className="text-xl font-bold text-gray-900">Travel Content</CardTitle>
+              <Button 
+                onClick={() => onNavigate('admin-add-guide')}
+                className="bg-orange-500 hover:bg-orange-600 cursor-pointer"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add New Travel Guide
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search content..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-full sm:w-32">
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="guide">Guide</SelectItem>
+                  <SelectItem value="blog">Blog</SelectItem>
+                  <SelectItem value="video">Video</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={regionFilter} onValueChange={setRegionFilter}>
+                <SelectTrigger className="w-full sm:w-32">
+                  <SelectValue placeholder="Region" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Regions</SelectItem>
+                  <SelectItem value="NSW">NSW</SelectItem>
+                  <SelectItem value="VIC">VIC</SelectItem>
+                  <SelectItem value="QLD">QLD</SelectItem>
+                  <SelectItem value="WA">WA</SelectItem>
+                  <SelectItem value="SA">SA</SelectItem>
+                  <SelectItem value="TAS">TAS</SelectItem>
+                  <SelectItem value="NT">NT</SelectItem>
+                  <SelectItem value="ACT">ACT</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Content Table */}
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader className="bg-gray-50">
+                  <TableRow>
+                    <TableHead className="font-medium text-gray-900">Title</TableHead>
+                    <TableHead className="font-medium text-gray-900">Type</TableHead>
+                    <TableHead className="font-medium text-gray-900">Region</TableHead>
+                    <TableHead className="font-medium text-gray-900">Last Updated</TableHead>
+                    <TableHead className="font-medium text-gray-900 text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredContent.map((item) => (
+                    <TableRow key={item.id} className="border-gray-200">
+                      <TableCell className="font-medium text-gray-900">{item.title}</TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={getBadgeVariant(item.type)}
+                          className={getBadgeColor(item.type)}
+                        >
+                          {item.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-gray-600">{item.region}</TableCell>
+                      <TableCell className="text-gray-600">
+                        {new Date(item.lastUpdated).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="cursor-pointer"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="cursor-pointer text-destructive hover:text-destructive-foreground hover:bg-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {filteredContent.length === 0 && (
+              <div className="text-center py-12">
+                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No content found matching your filters</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+import React, { useState } from 'react';
+import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Input } from './ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
+import { Avatar, AvatarFallback } from './ui/avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { Label } from './ui/label';
+import { Search, UserPlus, Trash2, UserX, Shield, User } from 'lucide-react';
+import { toast } from 'sonner';
+
+type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users';
+
+interface AdminUsersProps {
+  onNavigate: (page: Page) => void;
+}
+
+interface UserData {
+  id: string;
+  name: string;
+  email: string;
+  role: 'User' | 'Admin';
+  registered: string;
+  status: 'Active' | 'Suspended';
+  avatar?: string;
+}
+
+interface InviteFormData {
+  email: string;
+  role: 'User' | 'Admin';
+}
+
+export function AdminUsers({ onNavigate }: AdminUsersProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [inviteForm, setInviteForm] = useState<InviteFormData>({ email: '', role: 'User' });
+
+  // Mock data for demonstration
+  const [users, setUsers] = useState<UserData[]>([
+    {
+      id: '1',
+      name: 'John Admin',
+      email: 'admin@travelquest.com',
+      role: 'Admin',
+      registered: '2023-12-01',
+      status: 'Active'
+    },
+    {
+      id: '2',
+      name: 'Sarah Johnson',
+      email: 'sarah@example.com',
+      role: 'User',
+      registered: '2024-01-15',
+      status: 'Active'
+    },
+    {
+      id: '3',
+      name: 'Mike Chen',
+      email: 'mike@example.com',
+      role: 'User',
+      registered: '2024-01-14',
+      status: 'Suspended'
+    },
+    {
+      id: '4',
+      name: 'Emma Wilson',
+      email: 'emma@example.com',
+      role: 'User',
+      registered: '2024-01-13',
+      status: 'Active'
+    },
+    {
+      id: '5',
+      name: 'David Brown',
+      email: 'david@example.com',
+      role: 'User',
+      registered: '2024-01-12',
+      status: 'Active'
+    },
+    {
+      id: '6',
+      name: 'Lisa Anderson',
+      email: 'lisa@example.com',
+      role: 'User',
+      registered: '2024-01-11',
+      status: 'Active'
+    },
+  ]);
+
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = 
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
+  });
+
+  const handleRoleChange = (userId: string, newRole: 'User' | 'Admin') => {
+    setUsers(prev => prev.map(user => 
+      user.id === userId ? { ...user, role: newRole } : user
+    ));
+    toast.success(`User role updated to ${newRole}`);
+  };
+
+  const handleStatusToggle = (userId: string) => {
+    setUsers(prev => prev.map(user => {
+      if (user.id === userId) {
+        const newStatus = user.status === 'Active' ? 'Suspended' : 'Active';
+        toast.success(`User ${newStatus.toLowerCase()} successfully`);
+        return { ...user, status: newStatus };
+      }
+      return user;
+    }));
+  };
+
+  const handleDeleteUser = (userId: string, userName: string) => {
+    setUsers(prev => prev.filter(user => user.id !== userId));
+    toast.success(`User ${userName} deleted successfully`);
+  };
+
+  const handleInviteUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteForm.email) {
+      toast.error('Email is required');
+      return;
+    }
+
+    // Check if user already exists
+    const existingUser = users.find(user => user.email.toLowerCase() === inviteForm.email.toLowerCase());
+    if (existingUser) {
+      toast.error('User with this email already exists');
+      return;
+    }
+
+    // Add new user
+    const newUser: UserData = {
+      id: Date.now().toString(),
+      name: inviteForm.email.split('@')[0],
+      email: inviteForm.email,
+      role: inviteForm.role,
+      registered: new Date().toISOString().split('T')[0],
+      status: 'Active'
+    };
+
+    setUsers(prev => [...prev, newUser]);
+    toast.success(`Invitation sent to ${inviteForm.email}`);
+    setInviteForm({ email: '', role: 'User' });
+    setIsInviteModalOpen(false);
+  };
+
+  const getRoleBadgeColor = (role: string) => {
+    return role === 'Admin' 
+      ? 'bg-orange-100 text-orange-700 border-orange-200'
+      : 'bg-blue-100 text-blue-700 border-blue-200';
+  };
+
+  const getStatusBadgeColor = (status: string) => {
+    return status === 'Active' 
+      ? 'bg-green-100 text-green-700 border-green-200'
+      : 'bg-red-100 text-red-700 border-red-200';
+  };
+
+  const totalUsers = users.length;
+  const activeUsers = users.filter(u => u.status === 'Active').length;
+  const adminUsers = users.filter(u => u.role === 'Admin').length;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">User Management</h1>
+              <p className="text-gray-600">Manage user accounts, roles, and permissions</p>
+            </div>
+            <Dialog open={isInviteModalOpen} onOpenChange={setIsInviteModalOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-orange-500 hover:bg-orange-600 cursor-pointer">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Invite User
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Invite New User</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleInviteUser} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="invite-email">Email Address</Label>
+                    <Input
+                      id="invite-email"
+                      type="email"
+                      placeholder="user@example.com"
+                      value={inviteForm.email}
+                      onChange={(e) => setInviteForm(prev => ({ ...prev, email: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="invite-role">Role</Label>
+                    <Select 
+                      value={inviteForm.role} 
+                      onValueChange={(value: 'User' | 'Admin') => setInviteForm(prev => ({ ...prev, role: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="User">User</SelectItem>
+                        <SelectItem value="Admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex justify-end gap-3">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setIsInviteModalOpen(false)}
+                      className="cursor-pointer"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit"
+                      className="bg-orange-500 hover:bg-orange-600 cursor-pointer"
+                    >
+                      Send Invitation
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="bg-white shadow-sm border-gray-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Users</p>
+                  <p className="text-3xl font-bold text-gray-900">{totalUsers}</p>
+                </div>
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <User className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white shadow-sm border-gray-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Active Users</p>
+                  <p className="text-3xl font-bold text-gray-900">{activeUsers}</p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <User className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white shadow-sm border-gray-200">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Administrators</p>
+                  <p className="text-3xl font-bold text-gray-900">{adminUsers}</p>
+                </div>
+                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <Shield className="w-6 h-6 text-orange-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Users Table */}
+        <Card className="bg-white shadow-sm border-gray-200">
+          <CardHeader className="border-b border-gray-200">
+            <CardTitle className="text-xl font-bold text-gray-900">Users</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            {/* Search */}
+            <div className="mb-6">
+              <div className="relative max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search users..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            {/* Users Table */}
+            {filteredUsers.length > 0 ? (
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader className="bg-gray-50">
+                    <TableRow>
+                      <TableHead className="font-medium text-gray-900">User</TableHead>
+                      <TableHead className="font-medium text-gray-900">Email</TableHead>
+                      <TableHead className="font-medium text-gray-900">Role</TableHead>
+                      <TableHead className="font-medium text-gray-900">Registered</TableHead>
+                      <TableHead className="font-medium text-gray-900">Status</TableHead>
+                      <TableHead className="font-medium text-gray-900 text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user) => (
+                      <TableRow key={user.id} className="border-gray-200">
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10">
+                              <AvatarFallback className="bg-orange-100 text-orange-700">
+                                {user.name.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium text-gray-900">{user.name}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-gray-600">{user.email}</TableCell>
+                        <TableCell>
+                          <Select
+                            value={user.role}
+                            onValueChange={(value: 'User' | 'Admin') => handleRoleChange(user.id, value)}
+                          >
+                            <SelectTrigger className="w-24 h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="User">User</SelectItem>
+                              <SelectItem value="Admin">Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="text-gray-600">
+                          {new Date(user.registered).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getStatusBadgeColor(user.status)}>
+                            {user.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleStatusToggle(user.id)}
+                              className={`cursor-pointer text-xs ${
+                                user.status === 'Active' 
+                                  ? 'text-red-600 hover:text-red-700 hover:bg-red-50'
+                                  : 'text-green-600 hover:text-green-700 hover:bg-green-50'
+                              }`}
+                            >
+                              {user.status === 'Active' ? (
+                                <UserX className="w-4 h-4" />
+                              ) : (
+                                <User className="w-4 h-4" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteUser(user.id, user.name)}
+                              className="cursor-pointer text-destructive hover:text-destructive-foreground hover:bg-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500 mb-2">No users found</p>
+                <p className="text-sm text-gray-400">
+                  {searchTerm 
+                    ? 'Try adjusting your search terms' 
+                    : 'Invite users to get started'
+                  }
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+import React, { useState } from 'react';
+import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Alert, AlertDescription } from './ui/alert';
+import { Eye, EyeOff, Mail, Lock, User, AlertCircle } from 'lucide-react';
+import { supabase } from '../utils/supabase/client';
+import { toast } from 'sonner';
+
+interface AuthProps {
+  onAuthSuccess?: () => void;
+  isAdminAuth?: boolean;
+}
+
+export function Auth({ onAuthSuccess, isAdminAuth = false }: AuthProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    fullName: ''
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateForm = (isSignUp: boolean) => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = 'Please enter a valid email';
+    } else if (isAdminAuth && !formData.email.includes('admin')) {
+      newErrors.email = 'Admin email required (must contain "admin")';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+
+    if (isSignUp) {
+      if (!formData.fullName) {
+        newErrors.fullName = 'Full name is required';
+      }
+      if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSignIn = async () => {
+    if (!validateForm(false)) return;
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          toast.error('Invalid email or password');
+        } else {
+          toast.error(error.message);
+        }
+        return;
+      }
+
+      toast.success('Signed in successfully!');
+      onAuthSuccess?.();
+    } catch (error) {
+      console.error('Sign in error:', error);
+      toast.error('An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignUp = async () => {
+    if (!validateForm(true)) return;
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.fullName,
+            role: isAdminAuth ? 'admin' : 'user',
+          },
+        },
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      if (data.user && !data.session) {
+        toast.success('Please check your email to confirm your account');
+      } else {
+        toast.success('Account created successfully!');
+        onAuthSuccess?.();
+      }
+    } catch (error) {
+      console.error('Sign up error:', error);
+      toast.error('An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error) {
+        // If Google OAuth is not configured, show a helpful message
+        if (error.message.includes('provider is not enabled')) {
+          toast.error('Google sign-in is not configured. Please use email/password instead.');
+        } else {
+          toast.error(error.message);
+        }
+      }
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      toast.error('Google sign-in failed. Please try email/password instead.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  return (
+    <div className="min-h-screen relative flex items-center justify-center p-4">
+      {/* Hero Background */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&h=1080&fit=crop')"
+        }}
+      >
+        <div className={`absolute inset-0 ${isAdminAuth ? 'bg-black/70' : 'bg-black/50'}`} />
+      </div>
+
+      {/* Auth Card */}
+      <Card className="relative z-10 w-full max-w-md bg-white/95 backdrop-blur-sm border-white/20 shadow-2xl">
+        <CardHeader className="text-center pb-2">
+          <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <span className="text-white font-bold">TQ</span>
+          </div>
+          {isAdminAuth && (
+            <div className="mb-2">
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Admin Login</h1>
+              <p className="text-sm text-gray-600">Access the TravelQuest administration panel</p>
+            </div>
+          )}
+          <CardTitle className={`${isAdminAuth ? 'text-lg' : 'text-xl'} text-gray-900`}>
+            {isAdminAuth ? 'Administrator Access' : 'Welcome to TravelQuest'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {isAdminAuth && (
+            <Alert className="border-orange-200 bg-orange-50">
+              <AlertCircle className="h-4 w-4 text-orange-600" />
+              <AlertDescription className="text-orange-700">
+                Admin access only. Use your administrator credentials.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <Tabs defaultValue="signin" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="signin">Sign In</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="signin" className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signin-email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="signin-email"
+                    type="email"
+                    placeholder={isAdminAuth ? "admin@travelquest.com" : "your@email.com"}
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className={`pl-10 ${errors.email ? 'border-red-500' : ''}`}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-sm text-red-600">{errors.email}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="signin-password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="signin-password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    className={`pl-10 pr-10 ${errors.password ? 'border-red-500' : ''}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-red-600">{errors.password}</p>
+                )}
+              </div>
+
+              <Button 
+                onClick={handleSignIn}
+                disabled={isLoading}
+                className="w-full bg-orange-500 hover:bg-orange-600 cursor-pointer"
+              >
+                {isLoading ? 'Signing In...' : 'Sign In'}
+              </Button>
+            </TabsContent>
+
+            <TabsContent value="signup" className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signup-name">Full Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="signup-name"
+                    type="text"
+                    placeholder="Your full name"
+                    value={formData.fullName}
+                    onChange={(e) => handleInputChange('fullName', e.target.value)}
+                    className={`pl-10 ${errors.fullName ? 'border-red-500' : ''}`}
+                  />
+                </div>
+                {errors.fullName && (
+                  <p className="text-sm text-red-600">{errors.fullName}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="signup-email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    placeholder={isAdminAuth ? "admin@travelquest.com" : "your@email.com"}
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className={`pl-10 ${errors.email ? 'border-red-500' : ''}`}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-sm text-red-600">{errors.email}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="signup-password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="signup-password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Create a password"
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    className={`pl-10 pr-10 ${errors.password ? 'border-red-500' : ''}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-red-600">{errors.password}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="signup-confirm">Confirm Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="signup-confirm"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Confirm your password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                    className={`pl-10 ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                  />
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-sm text-red-600">{errors.confirmPassword}</p>
+                )}
+              </div>
+
+              <Button 
+                onClick={handleSignUp}
+                disabled={isLoading}
+                className="w-full bg-orange-500 hover:bg-orange-600 cursor-pointer"
+              >
+                {isLoading ? 'Creating Account...' : 'Create Account'}
+              </Button>
+            </TabsContent>
+          </Tabs>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-gray-500">Or continue with</span>
+            </div>
+          </div>
+
+          <Button 
+            variant="outline" 
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
+            className="w-full cursor-pointer"
+          >
+            <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Continue with Google
+          </Button>
+
+          {isAdminAuth && (
+            <div className="text-center">
+              <p className="text-xs text-gray-500">
+                Need help? Contact IT support at support@travelquest.com
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+import React, { useState } from 'react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { Calendar, Users, CheckCircle, Loader2 } from 'lucide-react';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { supabase } from '../utils/supabase/client';
+import { toast } from 'sonner';
+
+interface BookingFormProps {
+  destinationId: string;
+  destinationName: string;
+  price: string;
+  onBookingSuccess: () => void;
+}
+
+export function BookingForm({ destinationId, destinationName, price, onBookingSuccess }: BookingFormProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [formData, setFormData] = useState({
+    checkIn: '',
+    checkOut: '',
+    guests: '2'
+  });
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const validateBooking = () => {
+    if (!formData.checkIn || !formData.checkOut || !formData.guests) {
+      toast.error('Please fill in all fields');
+      return false;
+    }
+
+    const checkInDate = new Date(formData.checkIn);
+    const checkOutDate = new Date(formData.checkOut);
+    const today = new Date();
+    const guestCount = parseInt(formData.guests);
+    
+    if (checkInDate < today) {
+      toast.error('Check-in date cannot be in the past');
+      return false;
+    }
+    
+    if (checkOutDate <= checkInDate) {
+      toast.error('Check-out date must be after check-in date');
+      return false;
+    }
+
+    // Calculate trip duration in days
+    const tripDuration = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Maximum trip duration: 1 month (30 days)
+    if (tripDuration > 30) {
+      toast.error('Trip duration cannot exceed 30 days (1 month)');
+      return false;
+    }
+
+    // Validate guest count
+    if (guestCount < 1) {
+      toast.error('At least 1 guest is required');
+      return false;
+    }
+
+    if (guestCount > 50) {
+      toast.error('Maximum of 50 guests allowed per trip');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleBooking = async () => {
+    if (!validateBooking()) {
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error('Please sign in to book a trip');
+        return;
+      }
+
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/destinations/${destinationId}/book`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          checkIn: formData.checkIn,
+          checkOut: formData.checkOut,
+          guests: formData.guests
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to book trip');
+      }
+
+      setBookingSuccess(true);
+      toast.success('Trip booked successfully!');
+      onBookingSuccess();
+      
+      // Reset form after success
+      setTimeout(() => {
+        setIsOpen(false);
+        setBookingSuccess(false);
+        setFormData({ checkIn: '', checkOut: '', guests: '2' });
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error booking trip:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to book trip');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
+  const getMaxCheckoutDate = () => {
+    if (!formData.checkIn) return '';
+    const checkInDate = new Date(formData.checkIn);
+    const maxDate = new Date(checkInDate);
+    maxDate.setDate(maxDate.getDate() + 30); // 30 days max
+    return maxDate.toISOString().split('T')[0];
+  };
+
+  const tripDuration = formData.checkIn && formData.checkOut 
+    ? Math.ceil((new Date(formData.checkOut).getTime() - new Date(formData.checkIn).getTime()) / (1000 * 60 * 60 * 24))
+    : 0;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button size="lg" className="w-full cursor-pointer">
+          <Calendar className="w-4 h-4 mr-2" />
+          Book This Trip
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Book Your Trip to {destinationName}</DialogTitle>
+          <DialogDescription>
+            Select your travel dates and number of guests to book your adventure.
+          </DialogDescription>
+        </DialogHeader>
+
+        {bookingSuccess ? (
+          <div className="text-center py-8">
+            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Booking Confirmed!</h3>
+            <p className="text-muted-foreground">
+              Your trip has been successfully booked. You'll be able to leave a review after your visit.
+            </p>
+          </div>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Trip Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="checkIn">Check-in Date</Label>
+                  <Input
+                    id="checkIn"
+                    type="date"
+                    value={formData.checkIn}
+                    min={getTodayDate()}
+                    onChange={(e) => handleInputChange('checkIn', e.target.value)}
+                    className="cursor-pointer"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="checkOut">Check-out Date</Label>
+                  <Input
+                    id="checkOut"
+                    type="date"
+                    value={formData.checkOut}
+                    min={formData.checkIn || getTodayDate()}
+                    max={getMaxCheckoutDate()}
+                    onChange={(e) => handleInputChange('checkOut', e.target.value)}
+                    className="cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="guests">Number of Guests (Max 50)</Label>
+                <div className="relative">
+                  <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    id="guests"
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={formData.guests}
+                    onChange={(e) => handleInputChange('guests', e.target.value)}
+                    className="pl-10 cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span>Price per night:</span>
+                  <span className="font-semibold">{price}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm text-muted-foreground">
+                  <span>Guests: {formData.guests}</span>
+                  {tripDuration > 0 && (
+                    <span className={tripDuration > 30 ? 'text-destructive font-medium' : ''}>
+                      {tripDuration} {tripDuration === 1 ? 'night' : 'nights'}
+                      {tripDuration > 30 && ' (Max: 30)'}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <Button 
+                onClick={handleBooking} 
+                disabled={isLoading}
+                className="w-full cursor-pointer"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Booking...
+                  </>
+                ) : (
+                  'Confirm Booking'
+                )}
+              </Button>
+
+              <p className="text-xs text-muted-foreground text-center">
+                This is a demo booking. No actual payment will be processed.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+import React, { useState, useEffect } from 'react';
+import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Textarea } from './ui/textarea';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { ImageWithFallback } from './figma/ImageWithFallback';
+import { BookingForm } from './BookingForm';
+import { ArrowLeft, Star, MapPin, Clock, Heart, Share2, Calendar, Users, Send, Loader2, AlertCircle } from 'lucide-react';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { supabase } from '../utils/supabase/client';
+import { toast } from 'sonner';
+import type { User } from '@supabase/supabase-js';
+
+interface DestinationDetailProps {
+  destinationId: string | null;
+  onBack: () => void;
+  user: User | null;
+}
+
+interface Destination {
+  id: string;
+  name: string;
+  description: string;
+  longDescription: string;
+  images: string[];
+  rating: number;
+  reviews: number;
+  category: string;
+  region: string;
+  duration: string;
+  price: string;
+  highlights: string[];
+  bestTime: string;
+  difficulty: string;
+  groupSize: string;
+}
+
+interface Comment {
+  id: string;
+  userId: string;
+  userName: string;
+  comment: string;
+  rating: number;
+  date: string;
+  created_at?: string;
+}
+
+export function DestinationDetail({ destinationId, onBack, user }: DestinationDetailProps) {
+  const [destination, setDestination] = useState<Destination | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [newComment, setNewComment] = useState('');
+  const [newRating, setNewRating] = useState(5);
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [hasVisited, setHasVisited] = useState(false);
+  const [isCheckingVisit, setIsCheckingVisit] = useState(false);
+  const [isTogglingSave, setIsTogglingSave] = useState(false);
+
+  useEffect(() => {
+    if (destinationId) {
+      fetchDestination();
+      fetchComments();
+      if (user) {
+        checkUserVisit();
+        checkSavedStatus();
+      }
+    }
+  }, [destinationId, user]);
+
+  const fetchDestination = async () => {
+    if (!destinationId) return;
+
+    try {
+      setIsLoading(true);
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/destinations/${destinationId}`, {
+        headers: {
+          'Authorization': `Bearer ${publicAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setDestination(data.destination);
+    } catch (err) {
+      console.error('Error fetching destination:', err);
+      setError('Failed to load destination details. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchComments = async () => {
+    if (!destinationId) return;
+
+    try {
+      setIsLoadingComments(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/destinations/${destinationId}/comments`, {
+        headers: {
+          'Authorization': session?.access_token ? `Bearer ${session.access_token}` : `Bearer ${publicAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setComments(data.comments || []);
+    } catch (err) {
+      console.error('Error fetching comments:', err);
+    } finally {
+      setIsLoadingComments(false);
+    }
+  };
+
+  const checkUserVisit = async () => {
+    if (!destinationId || !user) return;
+
+    try {
+      setIsCheckingVisit(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) return;
+
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/user/visited/${destinationId}`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setHasVisited(data.hasVisited || false);
+      }
+    } catch (err) {
+      console.error('Error checking visit status:', err);
+    } finally {
+      setIsCheckingVisit(false);
+    }
+  };
+
+  const handleSubmitComment = async () => {
+    if (!newComment.trim() || !user || !destinationId) return;
+
+    try {
+      setIsSubmittingComment(true);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/destinations/${destinationId}/comments`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          comment: newComment,
+          rating: newRating
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to submit comment');
+      }
+
+      const data = await response.json();
+      
+      // Add the new comment to the list
+      setComments([data.comment, ...comments]);
+      setNewComment('');
+      setNewRating(5);
+      toast.success('Review posted successfully!');
+    } catch (err) {
+      console.error('Error submitting comment:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to submit comment. Please try again.');
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  const checkSavedStatus = async () => {
+    if (!destinationId || !user) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) return;
+
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/user/saved`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const savedIds = data.saved || [];
+        setIsSaved(savedIds.includes(destinationId));
+      }
+    } catch (err) {
+      console.error('Error checking saved status:', err);
+    }
+  };
+
+  const handleToggleSave = async () => {
+    if (!destinationId || !user || isTogglingSave) return;
+
+    try {
+      setIsTogglingSave(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('Authentication required');
+      }
+
+      const method = isSaved ? 'DELETE' : 'POST';
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/user/saved/${destinationId}`, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update saved status');
+      }
+
+      setIsSaved(!isSaved);
+      toast.success(isSaved ? 'Destination removed from saved list' : 'Destination saved successfully!');
+    } catch (err) {
+      console.error('Error toggling save status:', err);
+      toast.error('Failed to update saved status');
+    } finally {
+      setIsTogglingSave(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffTime = Math.abs(now.getTime() - date.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) return '1 day ago';
+      if (diffDays < 7) return `${diffDays} days ago`;
+      if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
+      return `${Math.ceil(diffDays / 30)} months ago`;
+    } catch {
+      return 'Recently';
+    }
+  };
+
+  const getUserInitials = (userName: string | undefined | null) => {
+    if (!userName || typeof userName !== 'string') {
+      return 'U';
+    }
+    
+    try {
+      return userName
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+    } catch {
+      return 'U';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading destination...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !destination) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">
+            {error || 'Destination not found'}
+          </h2>
+          <Button onClick={onBack} className="cursor-pointer">Go Back</Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="sticky top-16 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Button variant="ghost" onClick={onBack} className="flex items-center space-x-2 cursor-pointer">
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Destinations</span>
+            </Button>
+            <div className="flex items-center space-x-2">
+              {user && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleToggleSave}
+                  disabled={isTogglingSave}
+                  className={`cursor-pointer ${isSaved ? 'text-red-500' : ''}`}
+                >
+                  <Heart className={`w-4 h-4 mr-2 ${isSaved ? 'fill-current' : ''}`} />
+                  {isSaved ? 'Saved' : 'Save'}
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" className="cursor-pointer">
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            {/* Image Gallery */}
+            <div className="mb-8">
+              <div className="relative rounded-lg overflow-hidden mb-4">
+                <ImageWithFallback
+                  src={destination.images?.[selectedImage] || destination.images?.[0] || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&h=600&fit=crop'}
+                  alt={destination.name}
+                  className="w-full h-96 object-cover"
+                />
+              </div>
+              {destination.images && destination.images.length > 1 && (
+                <div className="grid grid-cols-4 gap-2">
+                  {destination.images.slice(0, 4).map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImage(index)}
+                      className={`relative rounded-lg overflow-hidden cursor-pointer ${
+                        selectedImage === index ? 'ring-2 ring-primary' : ''
+                      }`}
+                    >
+                      <ImageWithFallback
+                        src={image}
+                        alt={`${destination.name} ${index + 1}`}
+                        className="w-full h-20 object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Title and Basic Info */}
+            <div className="mb-8">
+              <div className="flex items-center space-x-4 mb-4">
+                <Badge variant="secondary">{destination.category}</Badge>
+                <Badge variant="outline">{destination.region}</Badge>
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-4">{destination.name}</h1>
+              <div className="flex items-center space-x-6 text-muted-foreground mb-4">
+                <div className="flex items-center space-x-1">
+                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                  <span className="font-medium">{destination.rating}</span>
+                  <span>({destination.reviews} reviews)</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <MapPin className="w-4 h-4" />
+                  <span>{destination.region}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Clock className="w-4 h-4" />
+                  <span>{destination.duration}</span>
+                </div>
+              </div>
+              <p className="text-lg leading-relaxed">{destination.description}</p>
+            </div>
+
+            {/* Detailed Description */}
+            {destination.longDescription && (
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold mb-4">About This Destination</h2>
+                <p className="text-muted-foreground leading-relaxed mb-6">
+                  {destination.longDescription}
+                </p>
+              </div>
+            )}
+
+            {/* Highlights */}
+            {destination.highlights && destination.highlights.length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold mb-4">What You'll Experience</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {destination.highlights.map((highlight, index) => (
+                    <div key={index} className="flex items-center space-x-3">
+                      <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
+                      <span>{highlight}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Comments Section */}
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold mb-6">Traveler Reviews</h2>
+              
+              {/* Add Comment */}
+              {user ? (
+                hasVisited ? (
+                  <Card className="mb-6">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Share Your Experience</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium mb-2">Rating</label>
+                        <div className="flex items-center space-x-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              onClick={() => setNewRating(star)}
+                              className={`p-1 cursor-pointer ${star <= newRating ? 'text-yellow-400' : 'text-gray-300'}`}
+                            >
+                              <Star className={`w-5 h-5 ${star <= newRating ? 'fill-current' : ''}`} />
+                            </button>
+                          ))}
+                          <span className="ml-2 text-sm text-muted-foreground">({newRating} stars)</span>
+                        </div>
+                      </div>
+                      <Textarea
+                        placeholder="Tell other travelers about your experience..."
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        className="mb-4"
+                      />
+                      <Button 
+                        onClick={handleSubmitComment} 
+                        disabled={!newComment.trim() || isSubmittingComment}
+                        className="cursor-pointer"
+                      >
+                        {isSubmittingComment ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Send className="w-4 h-4 mr-2" />
+                        )}
+                        Post Review
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="mb-6 border-orange-200 bg-orange-50/50">
+                    <CardContent className="pt-6">
+                      <div className="flex items-start space-x-3">
+                        <AlertCircle className="w-5 h-5 text-orange-500 mt-0.5" />
+                        <div>
+                          <p className="font-medium text-orange-800 mb-1">
+                            Reviews from verified travelers only
+                          </p>
+                          <p className="text-sm text-orange-700">
+                            Book and complete a trip with TravelQuest to share your authentic experience and help other travelers.
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              ) : (
+                <Card className="mb-6">
+                  <CardContent className="pt-6">
+                    <p className="text-muted-foreground text-center">
+                      <span>Sign in to book trips and share your travel experiences</span>
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Comments List */}
+              {isLoadingComments ? (
+                <div className="text-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                  <p className="text-muted-foreground">Loading reviews...</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {comments.map((comment) => (
+                    <Card key={comment.id}>
+                      <CardContent className="pt-6">
+                        <div className="flex items-start space-x-4">
+                          <Avatar>
+                            <AvatarFallback>
+                              {getUserInitials(comment.userName)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <span className="font-medium">{comment.userName || 'Anonymous User'}</span>
+                              {comment.rating && (
+                                <div className="flex items-center">
+                                  {[...Array(Math.max(1, Math.min(5, comment.rating)))].map((_, i) => (
+                                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  ))}
+                                </div>
+                              )}
+                              <span className="text-sm text-muted-foreground">
+                                {formatDate(comment.date || comment.created_at)}
+                              </span>
+                            </div>
+                            <p className="text-muted-foreground">{comment.comment}</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  
+                  {comments.length === 0 && (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">
+                        No reviews yet. Book a trip to be the first to share your experience!
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            {/* Booking Card */}
+            <Card className="sticky top-32 mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Book Your Trip</span>
+                  <span className="text-2xl font-bold text-primary">{destination.price}</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {user ? (
+                  <BookingForm 
+                    destinationId={destination.id}
+                    destinationName={destination.name}
+                    price={destination.price}
+                    onBookingSuccess={() => {
+                      // Refresh the visit status after booking
+                      setTimeout(() => checkUserVisit(), 1000);
+                    }}
+                  />
+                ) : (
+                  <div className="text-center">
+                    <p className="text-muted-foreground mb-4">
+                      Sign in to book this amazing destination
+                    </p>
+                    <Button className="w-full cursor-pointer" size="lg" onClick={() => {
+                      // This would typically trigger a sign-in modal
+                      toast.info('Please sign in to book trips');
+                    }}>
+                      Sign In to Book
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Trip Details */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Trip Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {destination.bestTime && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Best time to visit</span>
+                    <span>{destination.bestTime}</span>
+                  </div>
+                )}
+                {destination.difficulty && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Difficulty level</span>
+                    <span>{destination.difficulty}</span>
+                  </div>
+                )}
+                {destination.groupSize && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Group size</span>
+                    <span>{destination.groupSize}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Duration</span>
+                  <span>{destination.duration}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+import React from 'react';
+import { Button } from './ui/button';
+import { Card, CardContent } from './ui/card';
+import { Badge } from './ui/badge';
+import { ImageWithFallback } from './figma/ImageWithFallback';
+import { ArrowRight, MapPin, Star } from 'lucide-react';
+
+type Page = 'home' | 'listings' | 'destination' | 'account';
+
+interface HomeProps {
+  onDestinationSelect: (destinationId: string) => void;
+  onNavigate: (page: Page) => void;
+}
+
+const featuredDestinations = [
+  {
+    id: '1',
+    name: 'Santorini, Greece',
+    description: 'Stunning sunsets and white-washed buildings overlooking the Aegean Sea',
+    image: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=600&h=400&fit=crop',
+    rating: 4.9,
+    reviews: 234,
+    category: 'Romantic',
+    price: 'From $299/night'
+  },
+  {
+    id: '2',
+    name: 'Kyoto, Japan',
+    description: 'Ancient temples, traditional gardens, and authentic cultural experiences',
+    image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=600&h=400&fit=crop',
+    rating: 4.8,
+    reviews: 456,
+    category: 'Cultural',
+    price: 'From $180/night'
+  },
+  {
+    id: '3',
+    name: 'Banff, Canada',
+    description: 'Breathtaking mountain landscapes and pristine wilderness adventures',
+    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop',
+    rating: 4.7,
+    reviews: 189,
+    category: 'Adventure',
+    price: 'From $220/night'
+  }
+];
+
+export function Home({ onDestinationSelect, onNavigate }: HomeProps) {
+  return (
+    <div className="flex flex-col">
+      {/* Hero Section */}
+      <section className="relative h-[70vh] flex items-center justify-center">
+        <div className="absolute inset-0 z-0">
+          <ImageWithFallback
+            src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&h=1080&fit=crop"
+            alt="Beautiful travel destination"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/40" />
+        </div>
+        
+        <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            Discover Your Next Adventure
+          </h1>
+          <p className="text-xl md:text-2xl mb-8 text-white/90">
+            Explore breathtaking destinations with curated travel guides from local experts
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              size="lg" 
+              onClick={() => onNavigate('listings')}
+              className="bg-white text-black hover:bg-white/90"
+            >
+              Explore Destinations
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="border-white text-white hover:bg-white hover:text-black"
+            >
+              Watch Travel Stories
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Destinations */}
+      <section className="py-16 px-4 max-w-7xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Featured Destinations</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Hand-picked destinations that offer unforgettable experiences and memories that last a lifetime
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {featuredDestinations.map((destination) => (
+            <Card 
+              key={destination.id} 
+              className="group cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              onClick={() => onDestinationSelect(destination.id)}
+            >
+              <CardContent className="p-0">
+                <div className="relative overflow-hidden rounded-t-lg">
+                  <ImageWithFallback
+                    src={destination.image}
+                    alt={destination.name}
+                    className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <Badge className="absolute top-4 left-4 bg-white/90 text-black">
+                    {destination.category}
+                  </Badge>
+                </div>
+                
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xl font-bold">{destination.name}</h3>
+                    <div className="flex items-center space-x-1">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="text-sm font-medium">{destination.rating}</span>
+                      <span className="text-sm text-muted-foreground">({destination.reviews})</span>
+                    </div>
+                  </div>
+                  
+                  <p className="text-muted-foreground mb-4 line-clamp-2">
+                    {destination.description}
+                  </p>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center text-muted-foreground">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      <span className="text-sm">View Details</span>
+                    </div>
+                    <span className="font-semibold text-primary">{destination.price}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="text-center mt-12">
+          <Button 
+            size="lg" 
+            variant="outline"
+            onClick={() => onNavigate('listings')}
+          >
+            View All Destinations
+            <ArrowRight className="ml-2 w-5 h-5" />
+          </Button>
+        </div>
+      </section>
+
+      {/* Why Choose TravelQuest */}
+      <section className="bg-accent/50 py-16 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose TravelQuest?</h2>
+            <p className="text-lg text-muted-foreground">
+              We make travel planning effortless with expert guides and authentic experiences
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                <MapPin className="w-8 h-8 text-primary-foreground" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Expert Local Guides</h3>
+              <p className="text-muted-foreground">
+                Discover hidden gems with guides written by locals who know their destinations best
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                <Star className="w-8 h-8 text-primary-foreground" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Authentic Experiences</h3>
+              <p className="text-muted-foreground">
+                Skip the tourist traps and experience destinations like a local with our curated recommendations
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                <ArrowRight className="w-8 h-8 text-primary-foreground" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Easy Planning</h3>
+              <p className="text-muted-foreground">
+                From inspiration to booking, we make travel planning simple and stress-free
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+import React, { useState } from 'react';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
+import { Avatar, AvatarFallback } from './ui/avatar';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from './ui/dropdown-menu';
+import { User, Menu, LogOut, Heart, Shield } from 'lucide-react';
+import { supabase } from '../utils/supabase/client';
+import { toast } from 'sonner';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
+
+type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users';
+
+interface NavigationProps {
+  currentPage: Page;
+  onNavigate: (page: Page) => void;
+  user: SupabaseUser | null;
+  isAdmin?: boolean;
+}
+
+export function Navigation({ currentPage, onNavigate, user, isAdmin }: NavigationProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleSignIn = () => {
+    onNavigate('auth');
+  };
+
+  const handleAdminSignIn = () => {
+    onNavigate('admin-auth');
+  };
+
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      onNavigate('home');
+      toast.success('Signed out successfully');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast.error('Failed to sign out');
+    }
+  };
+
+  const navItems = [
+    { label: 'Home', page: 'home' as Page },
+    { label: 'Destinations', page: 'listings' as Page },
+  ];
+
+  const adminNavItems = [
+    { label: 'Dashboard', page: 'admin-dashboard' as Page },
+    { label: 'Add Guide', page: 'admin-add-guide' as Page },
+    { label: 'Comments', page: 'admin-comments' as Page },
+    { label: 'Users', page: 'admin-users' as Page },
+  ];
+
+  const isAdminPage = currentPage.startsWith('admin-');
+
+  return (
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 h-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <div className="flex items-center">
+            <button
+              onClick={() => onNavigate('home')}
+              className="flex items-center space-x-2 cursor-pointer"
+            >
+              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">TQ</span>
+              </div>
+              <span className="hidden sm:block font-bold text-gray-900">TravelQuest</span>
+            </button>
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            {!isAdminPage ? (
+              <>
+                {navItems.map((item) => (
+                  <button
+                    key={item.page}
+                    onClick={() => onNavigate(item.page)}
+                    className={`px-3 py-2 text-sm font-medium cursor-pointer transition-colors ${
+                      currentPage === item.page 
+                        ? 'text-orange-500 border-b-2 border-orange-500' 
+                        : 'text-gray-700 hover:text-orange-500'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </>
+            ) : (
+              <>
+                {adminNavItems.map((item) => (
+                  <button
+                    key={item.page}
+                    onClick={() => onNavigate(item.page)}
+                    className={`px-3 py-2 text-sm font-medium cursor-pointer transition-colors ${
+                      currentPage === item.page 
+                        ? 'text-orange-500 border-b-2 border-orange-500' 
+                        : 'text-gray-700 hover:text-orange-500'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </>
+            )}
+          </div>
+
+          {/* User Menu */}
+          <div className="flex items-center space-x-4">
+            {isAdmin && (
+              <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-200">
+                <Shield className="w-3 h-3 mr-1" />
+                Admin
+              </Badge>
+            )}
+            
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full cursor-pointer">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-orange-100 text-orange-700">
+                        {user.email?.[0]?.toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <div className="flex items-center justify-start gap-2 p-2">
+                    <div className="flex flex-col space-y-1 leading-none">
+                      <p className="font-medium">{user.user_metadata?.full_name || user.email}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => onNavigate('account')} className="cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    Account
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onNavigate('saved')} className="cursor-pointer">
+                    <Heart className="mr-2 h-4 w-4" />
+                    Saved Destinations
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => onNavigate(isAdminPage ? 'home' : 'admin-dashboard')} 
+                        className="cursor-pointer"
+                      >
+                        <Shield className="mr-2 h-4 w-4" />
+                        {isAdminPage ? 'Exit Admin' : 'Admin Dashboard'}
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleAdminSignIn} 
+                  className="cursor-pointer text-xs"
+                >
+                  <Shield className="w-3 h-3 mr-1" />
+                  Admin
+                </Button>
+                <Button 
+                  onClick={handleSignIn} 
+                  className="bg-orange-500 hover:bg-orange-600 cursor-pointer"
+                >
+                  Sign In
+                </Button>
+              </div>
+            )}
+
+            {/* Mobile menu button */}
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden cursor-pointer">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <div className="flex flex-col space-y-4 mt-8">
+                  {!user && (
+                    <div className="space-y-2 pb-4 border-b">
+                      <Button 
+                        onClick={() => {
+                          handleSignIn();
+                          setIsOpen(false);
+                        }}
+                        className="w-full bg-orange-500 hover:bg-orange-600 cursor-pointer"
+                      >
+                        Sign In
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          handleAdminSignIn();
+                          setIsOpen(false);
+                        }}
+                        className="w-full cursor-pointer"
+                      >
+                        <Shield className="w-4 h-4 mr-2" />
+                        Admin Login
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {!isAdminPage ? (
+                    <>
+                      {navItems.map((item) => (
+                        <button
+                          key={item.page}
+                          onClick={() => {
+                            onNavigate(item.page);
+                            setIsOpen(false);
+                          }}
+                          className={`text-left px-4 py-2 text-lg font-medium cursor-pointer transition-colors ${
+                            currentPage === item.page 
+                              ? 'text-orange-500 bg-orange-50' 
+                              : 'text-gray-700 hover:text-orange-500'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </>
+                  ) : (
+                    <>
+                      {adminNavItems.map((item) => (
+                        <button
+                          key={item.page}
+                          onClick={() => {
+                            onNavigate(item.page);
+                            setIsOpen(false);
+                          }}
+                          className={`text-left px-4 py-2 text-lg font-medium cursor-pointer transition-colors ${
+                            currentPage === item.page 
+                              ? 'text-orange-500 bg-orange-50' 
+                              : 'text-gray-700 hover:text-orange-500'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </>
+                  )}
+
+                  {user && (
+                    <div className="pt-4 border-t space-y-2">
+                      <button
+                        onClick={() => {
+                          onNavigate('account');
+                          setIsOpen(false);
+                        }}
+                        className="text-left px-4 py-2 text-lg font-medium cursor-pointer text-gray-700 hover:text-orange-500 w-full"
+                      >
+                        Account
+                      </button>
+                      <button
+                        onClick={() => {
+                          onNavigate('saved');
+                          setIsOpen(false);
+                        }}
+                        className="text-left px-4 py-2 text-lg font-medium cursor-pointer text-gray-700 hover:text-orange-500 w-full"
+                      >
+                        Saved Destinations
+                      </button>
+                      {isAdmin && (
+                        <button
+                          onClick={() => {
+                            onNavigate(isAdminPage ? 'home' : 'admin-dashboard');
+                            setIsOpen(false);
+                          }}
+                          className="text-left px-4 py-2 text-lg font-medium cursor-pointer text-gray-700 hover:text-orange-500 w-full"
+                        >
+                          {isAdminPage ? 'Exit Admin' : 'Admin Dashboard'}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          handleSignOut();
+                          setIsOpen(false);
+                        }}
+                        className="text-left px-4 py-2 text-lg font-medium cursor-pointer text-red-600 hover:text-red-700 w-full"
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+}
+import React, { useState, useEffect } from 'react';
+import { Button } from './ui/button';
+import { Card, CardContent } from './ui/card';
+import { Badge } from './ui/badge';
+import { ImageWithFallback } from './figma/ImageWithFallback';
+import { Star, Clock, Loader2, Heart, Trash2 } from 'lucide-react';
+import { projectId } from '../utils/supabase/info';
+import { supabase } from '../utils/supabase/client';
+import { toast } from 'sonner';
+import type { User } from '@supabase/supabase-js';
+
+interface SavedDestinationsProps {
+  user: User | null;
+  onDestinationSelect: (destinationId: string) => void;
+}
+
+interface Destination {
+  id: string;
+  name: string;
+  description: string;
+  images: string[];
+  rating: number;
+  reviews: number;
+  category: string;
+  region: string;
+  duration: string;
+  price: string;
+}
+
+export function SavedDestinations({ user, onDestinationSelect }: SavedDestinationsProps) {
+  const [savedDestinations, setSavedDestinations] = useState<Destination[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      fetchSavedDestinations();
+    } else {
+      setIsLoading(false);
+    }
+  }, [user]);
+
+  const fetchSavedDestinations = async () => {
+    if (!user) return;
+
+    try {
+      setIsLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('Authentication required');
+      }
+
+      // Get saved destination IDs
+      const savedResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/user/saved`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!savedResponse.ok) {
+        throw new Error('Failed to fetch saved destinations');
+      }
+
+      const savedData = await savedResponse.json();
+      const savedIds = savedData.saved || [];
+
+      if (savedIds.length === 0) {
+        setSavedDestinations([]);
+        return;
+      }
+
+      // Get all destinations
+      const destinationsResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/destinations`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!destinationsResponse.ok) {
+        throw new Error('Failed to fetch destinations');
+      }
+
+      const destinationsData = await destinationsResponse.json();
+      const allDestinations = destinationsData.destinations || [];
+
+      // Filter to only saved destinations
+      const saved = allDestinations.filter((dest: Destination) => 
+        savedIds.includes(dest.id)
+      );
+
+      setSavedDestinations(saved);
+    } catch (err) {
+      console.error('Error fetching saved destinations:', err);
+      setError('Failed to load saved destinations');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUnsaveDestination = async (destinationId: string) => {
+    if (!user) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/user/saved/${destinationId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove destination');
+      }
+
+      // Remove from local state
+      setSavedDestinations(prev => prev.filter(dest => dest.id !== destinationId));
+      toast.success('Destination removed from saved list');
+    } catch (err) {
+      console.error('Error removing saved destination:', err);
+      toast.error('Failed to remove destination');
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background py-8 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-20">
+            <Heart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-4">Save Your Favorite Destinations</h2>
+            <p className="text-muted-foreground">
+              Sign in to save destinations and create your travel wishlist
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background py-8 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+              <p className="text-muted-foreground">Loading your saved destinations...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background py-8 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <p className="text-destructive mb-4">{error}</p>
+              <Button onClick={fetchSavedDestinations}>Try Again</Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">Your Saved Destinations</h1>
+          <p className="text-lg text-muted-foreground">
+            {savedDestinations.length > 0 
+              ? `You have saved ${savedDestinations.length} destination${savedDestinations.length !== 1 ? 's' : ''}`
+              : 'Start exploring and save destinations to your wishlist'
+            }
+          </p>
+        </div>
+
+        {savedDestinations.length === 0 ? (
+          <div className="text-center py-20">
+            <Heart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No saved destinations yet</h3>
+            <p className="text-muted-foreground mb-6">
+              Explore our destinations and click the heart icon to save your favorites
+            </p>
+            <Button onClick={() => window.history.back()} className="cursor-pointer">
+              Explore Destinations
+            </Button>
+          </div>
+        ) : (
+          /* Destination Grid */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {savedDestinations.map((destination) => (
+              <Card 
+                key={destination.id} 
+                className="group cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              >
+                <CardContent className="p-0">
+                  <div className="relative overflow-hidden rounded-t-lg">
+                    <ImageWithFallback
+                      src={destination.images[0] || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600&h=400&fit=crop'}
+                      alt={destination.name}
+                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <Badge className="absolute top-4 left-4 bg-white/90 text-black">
+                      {destination.category}
+                    </Badge>
+                    <Badge className="absolute top-4 right-4 bg-black/80 text-white">
+                      {destination.region}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-12 right-2 bg-white/90 hover:bg-white text-red-500 p-2 h-auto"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleUnsaveDestination(destination.id);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  
+                  <div 
+                    className="p-6 cursor-pointer" 
+                    onClick={() => onDestinationSelect(destination.id)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-bold text-lg">{destination.name}</h3>
+                      <div className="flex items-center space-x-1">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm font-medium">{destination.rating}</span>
+                      </div>
+                    </div>
+                    
+                    <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                      {destination.description}
+                    </p>
+                    
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center text-muted-foreground">
+                        <Clock className="w-4 h-4 mr-1" />
+                        <span>{destination.duration}</span>
+                      </div>
+                      <span className="text-muted-foreground">
+                        {destination.reviews} reviews
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between mt-4">
+                      <span className="font-semibold text-primary">{destination.price}</span>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDestinationSelect(destination.id);
+                        }}
+                      >
+                        View Details
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
+import { Alert, AlertDescription } from './ui/alert';
+import { ExternalLink, Database, Shield, Settings } from 'lucide-react';
+import { supabase_connect } from '../utils/supabase/connect';
+
+export function SupabaseSetup() {
+  const handleConnectSupabase = () => {
+    supabase_connect();
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-2xl">
+        <CardHeader className="text-center">
+          <div className="w-16 h-16 bg-orange-500 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <Database className="w-8 h-8 text-white" />
+          </div>
+          <CardTitle className="text-2xl">Connect Your Supabase Project</CardTitle>
+          <p className="text-gray-600">
+            TravelQuest Adventures uses Supabase for authentication and data storage
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <Alert>
+            <Shield className="h-4 w-4" />
+            <AlertDescription>
+              Currently using demo authentication. Connect your Supabase project for full functionality.
+            </AlertDescription>
+          </Alert>
+
+          <div className="space-y-4">
+            <h3 className="font-medium text-gray-900">What you'll get with Supabase:</h3>
+            <ul className="space-y-2 text-sm text-gray-600">
+              <li className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-green-600" />
+                Real user authentication with Google OAuth
+              </li>
+              <li className="flex items-center gap-2">
+                <Database className="w-4 h-4 text-blue-600" />
+                Persistent data storage for destinations and bookings
+              </li>
+              <li className="flex items-center gap-2">
+                <Settings className="w-4 h-4 text-orange-600" />
+                Admin role management and user permissions
+              </li>
+            </ul>
+          </div>
+
+          <div className="border-t pt-4">
+            <h4 className="font-medium text-gray-900 mb-2">Quick Setup Instructions:</h4>
+            <ol className="text-sm text-gray-600 space-y-1 list-decimal list-inside">
+              <li>Create a new project at <a href="https://supabase.com" className="text-orange-600 hover:underline" target="_blank" rel="noopener noreferrer">supabase.com</a></li>
+              <li>Enable Google OAuth in Authentication &gt; Providers</li>
+              <li>Copy your project URL and anon key</li>
+              <li>Click the button below to connect</li>
+            </ol>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button 
+              onClick={handleConnectSupabase}
+              className="flex-1 bg-orange-500 hover:bg-orange-600 cursor-pointer"
+            >
+              <Database className="w-4 h-4 mr-2" />
+              Connect Supabase Project
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => window.open('https://supabase.com/docs/guides/auth/social-login/auth-google', '_blank')}
+              className="cursor-pointer"
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Setup Guide
+            </Button>
+          </div>
+
+          <div className="text-center text-xs text-gray-500">
+            You can continue using the app with demo authentication, but some features may be limited.
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+import React, { useState, useEffect } from 'react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Card, CardContent } from './ui/card';
+import { Badge } from './ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { ImageWithFallback } from './figma/ImageWithFallback';
+import { Search, MapPin, Star, Clock, Loader2 } from 'lucide-react';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
+
+interface TravelListingsProps {
+  onDestinationSelect: (destinationId: string) => void;
+}
+
+interface Destination {
+  id: string;
+  name: string;
+  description: string;
+  images: string[];
+  rating: number;
+  reviews: number;
+  category: string;
+  region: string;
+  duration: string;
+  price: string;
+}
+
+const categories = ['All', 'Adventure', 'Cultural', 'Romantic', 'Beach', 'Food'];
+const regions = ['All', 'Europe', 'Asia', 'North America', 'South America', 'Africa'];
+
+export function TravelListings({ onDestinationSelect }: TravelListingsProps) {
+  const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedRegion, setSelectedRegion] = useState('All');
+  const [sortBy, setSortBy] = useState('rating');
+
+  useEffect(() => {
+    fetchDestinations();
+  }, []);
+
+  const fetchDestinations = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/destinations`, {
+        headers: {
+          'Authorization': `Bearer ${publicAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setDestinations(data.destinations || []);
+    } catch (err) {
+      console.error('Error fetching destinations:', err);
+      setError('Failed to load destinations. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filteredDestinations = destinations
+    .filter(dest => {
+      const matchesSearch = dest.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          dest.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = selectedCategory === 'All' || dest.category === selectedCategory;
+      const matchesRegion = selectedRegion === 'All' || dest.region === selectedRegion;
+      
+      return matchesSearch && matchesCategory && matchesRegion;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'rating':
+          return b.rating - a.rating;
+        case 'reviews':
+          return b.reviews - a.reviews;
+        case 'name':
+          return a.name.localeCompare(b.name);
+        default:
+          return 0;
+      }
+    });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background py-8 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+              <p className="text-muted-foreground">Loading amazing destinations...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background py-8 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <p className="text-destructive mb-4">{error}</p>
+              <Button onClick={fetchDestinations} className="cursor-pointer">Try Again</Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">Explore Destinations</h1>
+          <p className="text-lg text-muted-foreground">
+            Discover amazing places around the world with our curated travel guides
+          </p>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="bg-card rounded-lg p-6 mb-8 shadow-sm border">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Search */}
+            <div className="lg:col-span-2 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search destinations..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 cursor-pointer"
+              />
+            </div>
+
+            {/* Category Filter */}
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map(category => (
+                  <SelectItem key={category} value={category}>{category}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Region Filter */}
+            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+              <SelectTrigger>
+                <SelectValue placeholder="Region" />
+              </SelectTrigger>
+              <SelectContent>
+                {regions.map(region => (
+                  <SelectItem key={region} value={region}>{region}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Sort */}
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rating">Highest Rated</SelectItem>
+                <SelectItem value="reviews">Most Reviews</SelectItem>
+                <SelectItem value="name">Name A-Z</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Results */}
+        <div className="flex justify-between items-center mb-6">
+          <p className="text-muted-foreground">
+            {filteredDestinations.length} destination{filteredDestinations.length !== 1 ? 's' : ''} found
+          </p>
+        </div>
+
+        {/* Destination Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredDestinations.map((destination) => (
+            <Card 
+              key={destination.id} 
+              className="group cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              onClick={() => onDestinationSelect(destination.id)}
+            >
+              <CardContent className="p-0">
+                <div className="relative overflow-hidden rounded-t-lg">
+                  <ImageWithFallback
+                    src={destination.images[0] || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600&h=400&fit=crop'}
+                    alt={destination.name}
+                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <Badge className="absolute top-4 left-4 bg-white/90 text-black">
+                    {destination.category}
+                  </Badge>
+                  <Badge className="absolute top-4 right-4 bg-black/80 text-white">
+                    {destination.region}
+                  </Badge>
+                </div>
+                
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-bold text-lg">{destination.name}</h3>
+                    <div className="flex items-center space-x-1">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="text-sm font-medium">{destination.rating}</span>
+                    </div>
+                  </div>
+                  
+                  <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                    {destination.description}
+                  </p>
+                  
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center text-muted-foreground">
+                      <Clock className="w-4 h-4 mr-1" />
+                      <span>{destination.duration}</span>
+                    </div>
+                    <span className="text-muted-foreground">
+                      {destination.reviews} reviews
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="font-semibold text-primary">{destination.price}</span>
+                    <Button size="sm" variant="outline" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      View Details
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* No Results */}
+        {filteredDestinations.length === 0 && destinations.length > 0 && (
+          <div className="text-center py-12">
+            <p className="text-lg text-muted-foreground mb-4">
+              No destinations found matching your criteria
+            </p>
+            <Button 
+              onClick={() => {
+                setSearchTerm('');
+                setSelectedCategory('All');
+                setSelectedRegion('All');
+              }}
+              className="cursor-pointer"
+            >
+              Clear Filters
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+import React, { useState, useEffect } from 'react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Badge } from './ui/badge';
+import { Label } from './ui/label';
+import { ImageWithFallback } from './figma/ImageWithFallback';
+import { User, Mail, Lock, MapPin, Heart, Calendar, Star, Settings, LogOut, Loader2 } from 'lucide-react';
+import { supabase } from '../utils/supabase/client';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
+
+type Page = 'home' | 'listings' | 'destination' | 'account';
+
+interface UserAccountProps {
+  user: SupabaseUser | null;
+  onNavigate: (page: Page) => void;
+}
+
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  memberSince: string;
+  totalTrips: number;
+  reviewsCount: number;
+}
+
+interface Booking {
+  id: string;
+  destinationId: string;
+  destinationName: string;
+  destinationImage: string;
+  checkIn: string;
+  checkOut: string;
+  guests: number;
+  status: string;
+  bookingDate: string;
+  canReview: boolean;
+}
+
+interface SavedDestination {
+  id: string;
+  name: string;
+  image: string;
+  category: string;
+}
+
+export function UserAccount({ user, onNavigate }: UserAccountProps) {
+  const [isSignIn, setIsSignIn] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [savedDestinations, setSavedDestinations] = useState<SavedDestination[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    name: ''
+  });
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile();
+      fetchSavedDestinations();
+      fetchUserBookings();
+    }
+  }, [user]);
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/user/profile`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserProfile(data.profile);
+      }
+    } catch (err) {
+      console.error('Error fetching user profile:', err);
+    }
+  };
+
+  const fetchSavedDestinations = async () => {
+    if (!user) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/user/saved`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // This endpoint returns saved destination IDs, we'd need another call to get full destination details
+        // For now, we'll keep the empty array until we implement the full saved destinations feature
+        setSavedDestinations([]);
+      }
+    } catch (err) {
+      console.error('Error fetching saved destinations:', err);
+    }
+  };
+
+  const fetchUserBookings = async () => {
+    if (!user) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/user/bookings`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setBookings(data.bookings || []);
+      }
+    } catch (err) {
+      console.error('Error fetching user bookings:', err);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // First create user via our backend
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${publicAnonKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          name: formData.name
+        })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create account');
+      }
+
+      // Then sign in the user
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password
+      });
+
+      if (signInError) {
+        throw new Error(signInError.message);
+      }
+
+      // Reset form
+      setFormData({
+        email: '',
+        password: '',
+        confirmPassword: '',
+        name: ''
+      });
+    } catch (err: any) {
+      console.error('Sign up error:', err);
+      setError(err.message || 'Failed to create account');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      // Reset form
+      setFormData({
+        email: '',
+        password: '',
+        confirmPassword: '',
+        name: ''
+      });
+    } catch (err: any) {
+      console.error('Sign in error:', err);
+      setError(err.message || 'Failed to sign in');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUserProfile(null);
+      setSavedDestinations([]);
+      setBookings([]);
+    } catch (err) {
+      console.error('Sign out error:', err);
+    }
+  };
+
+  const getUserDisplayName = () => {
+    return userProfile?.name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
+  };
+
+  const formatMemberSince = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long' 
+      });
+    } catch {
+      return dateString; // Return as-is if it's already formatted
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background py-16 px-4">
+        <div className="max-w-md mx-auto">
+          <Card>
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">
+                {isSignIn ? 'Welcome Back' : 'Join TravelQuest'}
+              </CardTitle>
+              <p className="text-muted-foreground">
+                {isSignIn 
+                  ? 'Sign in to access your travel plans and saved destinations'
+                  : 'Create an account to start planning your adventures'
+                }
+              </p>
+            </CardHeader>
+            <CardContent>
+              {error && (
+                <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                  <p className="text-destructive text-sm">{error}</p>
+                </div>
+              )}
+
+              <form onSubmit={isSignIn ? handleSignIn : handleSignUp} className="space-y-4">
+                {!isSignIn && (
+                  <div>
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      type="text"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                      className="mt-1"
+                      disabled={isLoading}
+                    />
+                  </div>
+                )}
+                
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    className="mt-1"
+                    disabled={isLoading}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    required
+                    className="mt-1"
+                    disabled={isLoading}
+                  />
+                </div>
+                
+                {!isSignIn && (
+                  <div>
+                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      required
+                      className="mt-1"
+                      disabled={isLoading}
+                    />
+                  </div>
+                )}
+                
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      {isSignIn ? 'Signing In...' : 'Creating Account...'}
+                    </>
+                  ) : (
+                    isSignIn ? 'Sign In' : 'Create Account'
+                  )}
+                </Button>
+              </form>
+              
+              <div className="mt-6 text-center">
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setIsSignIn(!isSignIn);
+                    setError(null);
+                    setFormData({
+                      email: '',
+                      password: '',
+                      confirmPassword: '',
+                      name: ''
+                    });
+                  }}
+                  className="text-sm"
+                  disabled={isLoading}
+                >
+                  {isSignIn 
+                    ? "Don't have an account? Sign up"
+                    : "Already have an account? Sign in"
+                  }
+                </Button>
+              </div>
+              
+              <div className="mt-4 text-center">
+                <p className="text-xs text-muted-foreground">
+                  By continuing, you agree to our Terms of Service and Privacy Policy
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background py-8 px-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Profile Header */}
+        <Card className="mb-8">
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6">
+              <Avatar className="w-24 h-24">
+                <AvatarFallback className="text-lg">
+                  {getUserDisplayName().substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="text-center md:text-left flex-1">
+                <h1 className="text-2xl font-bold mb-2">{getUserDisplayName()}</h1>
+                <p className="text-muted-foreground mb-4">{user.email}</p>
+                
+                <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm">
+                  {userProfile && (
+                    <>
+                      <div className="flex items-center space-x-1">
+                        <Calendar className="w-4 h-4" />
+                        <span>Member since {userProfile.memberSince}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <MapPin className="w-4 h-4" />
+                        <span>{userProfile.totalTrips || 0} trips</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Star className="w-4 h-4" />
+                        <span>{userProfile.reviewsCount || 0} reviews</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex space-x-2">
+                <Button variant="outline" size="sm">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleSignOut}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Account Tabs */}
+        <Tabs defaultValue="saved" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="saved">Saved Destinations</TabsTrigger>
+            <TabsTrigger value="trips">My Trips</TabsTrigger>
+            <TabsTrigger value="reviews">My Reviews</TabsTrigger>
+          </TabsList>
+
+          {/* Saved Destinations */}
+          <TabsContent value="saved">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Heart className="w-5 h-5" />
+                  <span>Saved Destinations</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {savedDestinations.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {savedDestinations.map((destination) => (
+                      <Card key={destination.id} className="group cursor-pointer hover:shadow-lg transition-shadow">
+                        <CardContent className="p-0">
+                          <div className="relative overflow-hidden rounded-t-lg">
+                            <ImageWithFallback
+                              src={destination.image}
+                              alt={destination.name}
+                              className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <Badge className="absolute top-2 left-2 bg-white/90 text-black">
+                              {destination.category}
+                            </Badge>
+                          </div>
+                          <div className="p-4">
+                            <h3 className="font-medium mb-2">{destination.name}</h3>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="w-full"
+                              onClick={() => onNavigate('listings')}
+                            >
+                              View Details
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Heart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No saved destinations yet</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Start exploring and save your favorite destinations for later
+                    </p>
+                    <Button onClick={() => onNavigate('listings')}>
+                      Browse Destinations
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Trip History */}
+          <TabsContent value="trips">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <MapPin className="w-5 h-5" />
+                  <span>My Trips</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {bookings.length > 0 ? (
+                  <div className="space-y-6">
+                    {bookings.map((booking) => (
+                      <Card key={booking.id} className="overflow-hidden">
+                        <CardContent className="p-0">
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-0">
+                            <div className="md:col-span-1">
+                              <ImageWithFallback
+                                src={booking.destinationImage}
+                                alt={booking.destinationName}
+                                className="w-full h-32 md:h-full object-cover"
+                              />
+                            </div>
+                            <div className="md:col-span-3 p-4">
+                              <div className="flex justify-between items-start mb-2">
+                                <h3 className="font-semibold text-lg">{booking.destinationName}</h3>
+                                <Badge variant={booking.status === 'confirmed' ? 'default' : 'secondary'}>
+                                  {booking.status}
+                                </Badge>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground mb-4">
+                                <div>
+                                  <span className="font-medium">Check-in:</span>
+                                  <br />
+                                  {new Date(booking.checkIn).toLocaleDateString()}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Check-out:</span>
+                                  <br />
+                                  {new Date(booking.checkOut).toLocaleDateString()}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Guests:</span>
+                                  <br />
+                                  {booking.guests} guests
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <div className="text-sm text-muted-foreground">
+                                  Booked on {new Date(booking.bookingDate).toLocaleDateString()}
+                                </div>
+                                {booking.canReview && (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => {
+                                      // Navigate to destination to leave review
+                                      onNavigate('listings');
+                                    }}
+                                  >
+                                    <Star className="w-4 h-4 mr-2" />
+                                    Leave Review
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No trips yet</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Book your first adventure and start creating memories
+                    </p>
+                    <Button onClick={() => onNavigate('listings')}>
+                      Plan Your Trip
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Reviews */}
+          <TabsContent value="reviews">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Star className="w-5 h-5" />
+                  <span>My Reviews</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Star className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No reviews yet</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Share your travel experiences to help other adventurers
+                  </p>
+                  <Button onClick={() => onNavigate('listings')}>
+                    Browse Destinations
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}
