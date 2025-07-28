@@ -11,6 +11,8 @@ import { AboutUs } from './components/AboutUs';
 import { ContactPage } from './components/ContactPage';
 import { UserAccount } from './components/UserAccount';
 import { SavedDestinations } from './components/SavedDestinations';
+import { TourDetails } from './components/TourDetails';
+import { BlogDetails } from './components/BlogDetails';
 import { Auth } from './components/Auth';
 import { AdminAuth } from './components/AdminAuth';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -19,11 +21,12 @@ import { AdminCommentModeration } from './components/AdminCommentModeration';
 import { AdminUsers } from './components/AdminUsers';
 import { NewNavigation } from './components/NewNavigation';
 import { NotFound } from './components/NotFound';
+import { ThemeProvider } from './components/ThemeProvider';
 import { Toaster } from './components/ui/sonner';
 import { supabase } from './utils/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
-type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact';
+type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -41,6 +44,8 @@ export default function App() {
     '/destination': 'destination',
     '/blogs': 'blogs',
     '/tours': 'tours',
+    '/tour-details': 'tour-details',
+    '/blog-details': 'blog-details',
     '/about': 'about',
     '/contact': 'contact',
     '/account': 'account',
@@ -267,8 +272,12 @@ export default function App() {
         );
       case 'blogs':
         return <BlogsPage onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
+      case 'blog-details':
+        return <BlogDetails blogId="1" onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
       case 'tours':
         return <ToursPage onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
+      case 'tour-details':
+        return <TourDetails tourId="1" onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
       case 'about':
         return <AboutUs onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
       case 'contact':
@@ -297,19 +306,21 @@ export default function App() {
   const showNavigation = !['auth', 'admin-auth'].includes(currentPage);
 
   return (
-    <div className="min-h-screen bg-background">
-      {showNavigation && (
-        <NewNavigation 
-          currentPage={currentPage} 
-          onNavigate={navigateToPage} 
-          user={user}
-          isAdmin={isAdmin}
-        />
-      )}
-      <main className="">
-        {renderPage()}
-      </main>
-      <Toaster />
-    </div>
+    <ThemeProvider>
+      <div className="min-h-screen bg-background">
+        {showNavigation && (
+          <NewNavigation 
+            currentPage={currentPage} 
+            onNavigate={navigateToPage} 
+            user={user}
+            isAdmin={isAdmin}
+          />
+        )}
+        <main className="">
+          {renderPage()}
+        </main>
+        <Toaster />
+      </div>
+    </ThemeProvider>
   );
 }

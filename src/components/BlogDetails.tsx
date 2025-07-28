@@ -10,7 +10,7 @@ import { Footer } from './Footer';
 import { 
   Calendar, 
   Clock, 
-  User,
+  User as UserIcon,
   MessageCircle,
   ArrowRight,
   Share2,
@@ -20,14 +20,14 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import type { User } from '@supabase/supabase-js';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
 
 interface BlogDetailsProps {
   blogId: string;
   onNavigate: (page: Page) => void;
-  user: User | null;
+  user: SupabaseUser | null;
   isAdmin?: boolean;
 }
 
@@ -471,7 +471,7 @@ export function BlogDetails({ blogId, onNavigate, user, isAdmin }: BlogDetailsPr
             >
               <Card>
                 <CardContent className="text-center py-8">
-                  <User className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                  <UserIcon className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                   <h3 className="font-semibold mb-2">Join the conversation</h3>
                   <p className="text-gray-600 mb-4">
                     Sign in to share your thoughts and connect with other travelers.

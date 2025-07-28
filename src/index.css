@@ -47,38 +47,38 @@
 }
 
 .dark {
-  --background: oklch(94.474% 0.00646 16.357);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
+  --background: #111111;
+  --foreground: #E5E5E5;
+  --card: #1a1a1a;
+  --card-foreground: #E5E5E5;
+  --popover: #1a1a1a;
+  --popover-foreground: #E5E5E5;
+  --primary: #FF6B35;
+  --primary-foreground: #ffffff;
+  --secondary: #333333;
+  --secondary-foreground: #E5E5E5;
+  --muted: #2a2a2a;
+  --muted-foreground: #888888;
+  --accent: #2a2a2a;
+  --accent-foreground: #E5E5E5;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #333333;
+  --input: #2a2a2a;
+  --ring: #FF6B35;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --sidebar: #1a1a1a;
+  --sidebar-foreground: #E5E5E5;
+  --sidebar-primary: #FF6B35;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2a2a2a;
+  --sidebar-accent-foreground: #E5E5E5;
+  --sidebar-border: #333333;
+  --sidebar-ring: #FF6B35;
 }
 
 a {
@@ -269,4 +269,81 @@ button:focus-visible {
 [data-slot="dropdown-menu-item"]:focus {
   background: var(--accent) !important;
   color: var(--accent-foreground) !important;
+}
+
+/* Dark mode image adjustments */
+.dark img {
+  filter: brightness(0.9) contrast(1.1);
+}
+
+.dark img:hover {
+  filter: brightness(1) contrast(1);
+}
+
+/* Dark mode body background */
+.dark body {
+  background-color: #111111;
+  color: #E5E5E5;
+}
+
+/* Theme transition animation */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Dark mode specific component styles */
+.dark .prose {
+  color: #E5E5E5;
+}
+
+.dark .prose h1,
+.dark .prose h2,
+.dark .prose h3,
+.dark .prose h4,
+.dark .prose h5,
+.dark .prose h6 {
+  color: #ffffff;
+}
+
+.dark .prose p {
+  color: #cccccc;
+}
+
+.dark .prose a {
+  color: #FFD1C1;
+}
+
+.dark .prose a:hover {
+  color: #FF6B35;
+}
+
+.dark .prose code {
+  background-color: #2a2a2a;
+  color: #E5E5E5;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.dark .prose pre {
+  background-color: #1a1a1a;
+  border: 1px solid #333333;
+}
+
+.dark .prose blockquote {
+  border-left-color: #FF6B35;
+  color: #cccccc;
+}
+
+/* Dark mode footer */
+.dark footer {
+  background-color: #111111 !important;
+  color: #E5E5E5 !important;
+}
+
+.dark footer a {
+  color: #FF6B35 !important;
+}
+
+.dark footer a:hover {
+  color: #FFD1C1 !important;
 }
