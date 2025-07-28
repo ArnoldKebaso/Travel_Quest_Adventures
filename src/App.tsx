@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Home } from './components/Home';
+import { Home as NewHome } from './components/NewHome';
 import { TravelListings } from './components/TravelListings';
 import { DestinationDetail } from './components/DestinationDetail';
 import { UserAccount } from './components/UserAccount';
@@ -11,6 +12,7 @@ import { AdminAddGuide } from './components/AdminAddGuide';
 import { AdminCommentModeration } from './components/AdminCommentModeration';
 import { AdminUsers } from './components/AdminUsers';
 import { Navigation } from './components/Navigation';
+import { NewNavigation } from './components/NewNavigation';
 import { NotFound } from './components/NotFound';
 import { Toaster } from './components/ui/sonner';
 import { supabase } from './utils/supabase/client';
@@ -24,6 +26,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [useNewDesign, setUseNewDesign] = useState(true); // Toggle for new design
 
   // Valid routes mapping
   const validRoutes = useMemo(() => ({
@@ -184,7 +187,11 @@ export default function App() {
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
-        return <Home onDestinationSelect={handleDestinationSelect} onNavigate={navigateToPage} />;
+        return useNewDesign ? (
+          <NewHome onDestinationSelect={handleDestinationSelect} onNavigate={navigateToPage} />
+        ) : (
+          <Home onDestinationSelect={handleDestinationSelect} onNavigate={navigateToPage} />
+        );
       case 'listings':
         return <TravelListings onDestinationSelect={handleDestinationSelect} />;
       case 'destination':
@@ -261,14 +268,23 @@ export default function App() {
   return (
     <div className="min-h-screen bg-background">
       {showNavigation && (
-        <Navigation 
-          currentPage={currentPage} 
-          onNavigate={navigateToPage} 
-          user={user}
-          isAdmin={isAdmin}
-        />
+        useNewDesign ? (
+          <NewNavigation 
+            currentPage={currentPage} 
+            onNavigate={navigateToPage} 
+            user={user}
+            isAdmin={isAdmin}
+          />
+        ) : (
+          <Navigation 
+            currentPage={currentPage} 
+            onNavigate={navigateToPage} 
+            user={user}
+            isAdmin={isAdmin}
+          />
+        )
       )}
-      <main className={showNavigation ? 'pt-16' : ''}>
+      <main className={showNavigation && !useNewDesign ? 'pt-16' : ''}>
         {renderPage()}
       </main>
       <Toaster />
