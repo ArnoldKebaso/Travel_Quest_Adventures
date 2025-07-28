@@ -139,7 +139,7 @@ export function ContactPage({ onNavigate, user, isAdmin }: ContactPageProps) {
       });
       setErrors({});
       
-    } catch (error) {
+    } catch {
       toast.error('Failed to send message. Please try again.');
     } finally {
       setIsSubmitting(false);

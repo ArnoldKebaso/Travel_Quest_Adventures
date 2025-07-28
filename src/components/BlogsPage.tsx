@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -7,7 +7,7 @@ import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { NewNavigation } from './NewNavigation';
 import { Footer } from './Footer';
-import { Search, Calendar, User, ExternalLink, PenTool } from 'lucide-react';
+import { Search, Calendar, ExternalLink, PenTool, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import type { User } from '@supabase/supabase-js';
 
@@ -35,7 +35,7 @@ interface BlogsPageProps {
 }
 
 // Mock blog posts data
-const generateMockPosts = (page: number = 1): BlogPost[] => {
+const generateMockPosts = (): BlogPost[] => {
   const regions = ['Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide', 'Darwin', 'Cairns', 'Gold Coast'];
   const tags = ['Adventure', 'Culture', 'Food', 'Nature', 'Photography', 'Solo Travel', 'Family', 'Budget'];
   const authors = [
@@ -44,11 +44,68 @@ const generateMockPosts = (page: number = 1): BlogPost[] => {
     { name: 'Emma Rodriguez', avatar: 'ER' },
     { name: 'James Wilson', avatar: 'JW' },
     { name: 'Lisa Thompson', avatar: 'LT' },
-    { name: 'Michael Brown', avatar: 'MB' }
+    { name: 'Michael Brown', avatar: 'MB' },
+    { name: 'Anna Davis', avatar: 'AD' },
+    { name: 'Robert Johnson', avatar: 'RJ' },
+    { name: 'Maria Garcia', avatar: 'MG' },
+    { name: 'Thomas Lee', avatar: 'TL' },
+    { name: 'Jennifer White', avatar: 'JW' },
+    { name: 'Christopher Martin', avatar: 'CM' },
+    { name: 'Amanda Taylor', avatar: 'AT' },
+    { name: 'Daniel Anderson', avatar: 'DA' },
+    { name: 'Rachel Moore', avatar: 'RM' },
+    { name: 'Kevin Jackson', avatar: 'KJ' },
+    { name: 'Stephanie Clark', avatar: 'SC' },
+    { name: 'Andrew Lewis', avatar: 'AL' },
+    { name: 'Nicole Hall', avatar: 'NH' },
+    { name: 'Ryan Young', avatar: 'RY' },
+    { name: 'Michelle King', avatar: 'MK' },
+    { name: 'Jonathan Wright', avatar: 'JW' },
+    { name: 'Laura Green', avatar: 'LG' },
+    { name: 'Steven Baker', avatar: 'SB' },
+    { name: 'Melissa Adams', avatar: 'MA' },
+    { name: 'Brian Nelson', avatar: 'BN' },
+    { name: 'Heather Carter', avatar: 'HC' },
+    { name: 'Jason Mitchell', avatar: 'JM' },
+    { name: 'Rebecca Perez', avatar: 'RP' }
   ];
 
-  return Array.from({ length: 6 }, (_, i) => {
-    const postId = (page - 1) * 6 + i + 1;
+  // Curated Unsplash travel blog images
+  const travelImages = [
+    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&auto=format&q=75', // Sydney Opera House
+    'https://images.unsplash.com/photo-1523482580672-f109ba8cb9be?w=400&h=300&fit=crop&auto=format&q=75', // Melbourne laneway
+    'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop&auto=format&q=75', // Great Barrier Reef
+    'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop&auto=format&q=75', // Uluru
+    'https://images.unsplash.com/photo-1601467034225-609c87b8e678?w=400&h=300&fit=crop&auto=format&q=75', // Blue Mountains
+    'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop&auto=format&q=75', // Gold Coast
+    'https://images.unsplash.com/photo-1548625361-3c8b9d1c67d3?w=400&h=300&fit=crop&auto=format&q=75', // Bondi Beach
+    'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop&auto=format&q=75', // Perth skyline
+    'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&auto=format&q=75', // Adelaide
+    'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?w=400&h=300&fit=crop&auto=format&q=75', // Cairns rainforest
+    'https://images.unsplash.com/photo-1518098268026-4e89f1a2cd8e?w=400&h=300&fit=crop&auto=format&q=75', // Darwin sunset
+    'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=300&fit=crop&auto=format&q=75', // Nature landscape
+    'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop&auto=format&q=75', // Team collaboration
+    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop&auto=format&q=75', // Tropical beach
+    'https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=400&h=300&fit=crop&auto=format&q=75', // Mountain hiking
+    'https://images.unsplash.com/photo-1524850011238-e3d235c7d4c9?w=400&h=300&fit=crop&auto=format&q=75', // City architecture
+    'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?w=400&h=300&fit=crop&auto=format&q=75', // Forest landscape
+    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&auto=format&q=75', // Iconic landmarks
+    'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&h=300&fit=crop&auto=format&q=75', // Wildlife
+    'https://images.unsplash.com/photo-1464822759844-d150baec013a?w=400&h=300&fit=crop&auto=format&q=75', // Desert landscape
+    'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400&h=300&fit=crop&auto=format&q=75', // Sunset views
+    'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop&auto=format&q=75', // Coastal views
+    'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=400&h=300&fit=crop&auto=format&q=75', // Adventure activities
+    'https://images.unsplash.com/photo-1502780402662-acc01917115e?w=400&h=300&fit=crop&auto=format&q=75', // Cultural experiences
+    'https://images.unsplash.com/photo-1543166112-5ba6b2e20fce?w=400&h=300&fit=crop&auto=format&q=75', // Food experiences
+    'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop&auto=format&q=75', // Photography spots
+    'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop&auto=format&q=75', // Family travel
+    'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=300&fit=crop&auto=format&q=75', // Solo travel
+    'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?w=400&h=300&fit=crop&auto=format&q=75', // Nature exploration
+    'https://images.unsplash.com/photo-1518098268026-4e89f1a2cd8e?w=400&h=300&fit=crop&auto=format&q=75'  // Budget travel
+  ];
+
+  return Array.from({ length: 30 }, (_, i) => {
+    const postId = i + 1;
     const author = authors[Math.floor(Math.random() * authors.length)];
     const region = regions[Math.floor(Math.random() * regions.length)];
     const postTags = tags.sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 3) + 1);
@@ -61,7 +118,7 @@ const generateMockPosts = (page: number = 1): BlogPost[] => {
       date: new Date(2024, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toLocaleDateString(),
       region,
       tags: postTags,
-      image: `https://images.unsplash.com/photo-${1500000000 + postId * 12345678}?w=400&h=300&fit=crop&auto=format&q=75`,
+      image: travelImages[(postId - 1) % travelImages.length],
       readTime: Math.floor(Math.random() * 8) + 3
     };
   });
@@ -70,19 +127,18 @@ const generateMockPosts = (page: number = 1): BlogPost[] => {
 export function BlogsPage({ onNavigate, user, isAdmin }: BlogsPageProps) {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('all');
   const [selectedTag, setSelectedTag] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [hasMorePosts, setHasMorePosts] = useState(true);
+  const postsPerPage = 6;
 
   // Initialize posts
   useEffect(() => {
     const loadInitialPosts = async () => {
       setIsLoading(true);
       await new Promise(resolve => setTimeout(resolve, 500)); // Simulate loading
-      setPosts(generateMockPosts(1));
+      setPosts(generateMockPosts());
       setIsLoading(false);
     };
 
@@ -99,44 +155,45 @@ export function BlogsPage({ onNavigate, user, isAdmin }: BlogsPageProps) {
     return matchesSearch && matchesRegion && matchesTag;
   });
 
-  // Load more posts (infinite scroll)
-  const loadMorePosts = useCallback(async () => {
-    if (isLoadingMore || !hasMorePosts) return;
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+  const startIndex = (currentPage - 1) * postsPerPage;
+  const endIndex = startIndex + postsPerPage;
+  const currentPosts = filteredPosts.slice(startIndex, endIndex);
 
-    setIsLoadingMore(true);
-    toast.info('Loading more posts...');
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedRegion, selectedTag]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll to top of posts grid
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
     
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const nextPage = currentPage + 1;
-    const newPosts = generateMockPosts(nextPage);
-    
-    setPosts(prev => [...prev, ...newPosts]);
-    setCurrentPage(nextPage);
-    
-    // Simulate end of posts after 5 pages
-    if (nextPage >= 5) {
-      setHasMorePosts(false);
-      toast.info('No more posts to load');
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages if total is small
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show pages around current page
+      const start = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+      const end = Math.min(totalPages, start + maxVisiblePages - 1);
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
     }
     
-    setIsLoadingMore(false);
-  }, [currentPage, isLoadingMore, hasMorePosts]);
-
-  // Infinite scroll handler
-  useEffect(() => {
-    const handleScroll = () => {
-      if (
-        window.innerHeight + document.documentElement.scrollTop
-        >= document.documentElement.offsetHeight - 1000
-      ) {
-        loadMorePosts();
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [loadMorePosts]);
+    return pages;
+  };
 
   const regions = ['Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide', 'Darwin', 'Cairns', 'Gold Coast'];
   const tags = ['Adventure', 'Culture', 'Food', 'Nature', 'Photography', 'Solo Travel', 'Family', 'Budget'];
@@ -221,6 +278,15 @@ export function BlogsPage({ onNavigate, user, isAdmin }: BlogsPageProps) {
           </div>
         </div>
 
+        {/* Results count */}
+        {!isLoading && filteredPosts.length > 0 && (
+          <div className="flex justify-between items-center mb-6">
+            <p className="text-gray-600">
+              Showing {startIndex + 1}-{Math.min(endIndex, filteredPosts.length)} of {filteredPosts.length} posts
+            </p>
+          </div>
+        )}
+
         {/* Blog Posts Grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -249,97 +315,136 @@ export function BlogsPage({ onNavigate, user, isAdmin }: BlogsPageProps) {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPosts.map((post, index) => (
-              <Card 
-                key={post.id} 
-                className="group overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-lg focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
-                tabIndex={0}
-                role="article"
-                aria-label={`Blog post: ${post.title}`}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                {/* Featured Image */}
-                <div className="aspect-video overflow-hidden relative">
-                  <img
-                    src={post.image}
-                    alt={`Featured image for ${post.title}`}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
-                  {/* Title Overlay on Hover */}
-                  <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <h3 className="text-white font-semibold text-sm line-clamp-2">
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {currentPosts.map((post, index) => (
+                <Card 
+                  key={post.id} 
+                  className="group overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-lg focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
+                  tabIndex={0}
+                  role="article"
+                  aria-label={`Blog post: ${post.title}`}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  {/* Featured Image */}
+                  <div className="aspect-video overflow-hidden relative">
+                    <img
+                      src={post.image}
+                      alt={`Featured image for ${post.title}`}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    
+                    {/* Title Overlay on Hover */}
+                    <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <h3 className="text-white font-semibold text-sm line-clamp-2">
+                        {post.title}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <CardContent className="p-4">
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {post.tags.slice(0, 2).map(tag => (
+                        <Badge key={tag} variant="secondary" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+
+                    {/* Title (visible when not hovering) */}
+                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:opacity-0 transition-opacity duration-300">
                       {post.title}
                     </h3>
-                  </div>
-                </div>
 
-                <CardContent className="p-4">
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {post.tags.slice(0, 2).map(tag => (
-                      <Badge key={tag} variant="secondary" className="text-xs">
-                        {tag}
-                      </Badge>
+                    {/* Excerpt */}
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                      {post.excerpt}
+                    </p>
+
+                    {/* Author & Meta */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage src="" alt={post.author.name} />
+                          <AvatarFallback className="text-xs">
+                            {post.author.avatar}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {post.author.name}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <Calendar className="w-3 h-3" />
+                            <span>{post.date}</span>
+                            <span>•</span>
+                            <span>{post.readTime} min read</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        aria-label={`Read more about ${post.title}`}
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center mt-12">
+                <div className="flex items-center space-x-2">
+                  {/* Previous button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="flex items-center space-x-1"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>Previous</span>
+                  </Button>
+
+                  {/* Page numbers */}
+                  <div className="flex items-center space-x-1">
+                    {getPageNumbers().map((pageNum) => (
+                      <Button
+                        key={pageNum}
+                        variant={pageNum === currentPage ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(pageNum)}
+                        className="w-10 h-10"
+                      >
+                        {pageNum}
+                      </Button>
                     ))}
                   </div>
 
-                  {/* Title (visible when not hovering) */}
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:opacity-0 transition-opacity duration-300">
-                    {post.title}
-                  </h3>
-
-                  {/* Excerpt */}
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {post.excerpt}
-                  </p>
-
-                  {/* Author & Meta */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src="" alt={post.author.name} />
-                        <AvatarFallback className="text-xs">
-                          {post.author.avatar}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {post.author.name}
-                        </p>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <Calendar className="w-3 h-3" />
-                          <span>{post.date}</span>
-                          <span>•</span>
-                          <span>{post.readTime} min read</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                      aria-label={`Read more about ${post.title}`}
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {/* Loading More Indicator */}
-        {isLoadingMore && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <PostSkeleton key={`loading-${index}`} />
-            ))}
-          </div>
+                  {/* Next button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="flex items-center space-x-1"
+                  >
+                    <span>Next</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 

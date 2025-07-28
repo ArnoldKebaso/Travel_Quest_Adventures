@@ -50,7 +50,8 @@ export default function App() {
     '/admin-dashboard': 'admin-dashboard',
     '/admin-add-guide': 'admin-add-guide',
     '/admin-comments': 'admin-comments',
-    '/admin-users': 'admin-users'
+    '/admin-users': 'admin-users',
+    '/404': 'not-found'
   } as Record<string, Page>), []);
 
   // Function to get page from URL
@@ -71,10 +72,10 @@ export default function App() {
 
   // Function to update URL when page changes
   const updateURL = useCallback((page: Page) => {
-    const url = Object.keys(validRoutes).find(key => validRoutes[key] === page) || '/404';
+    const url = Object.keys(validRoutes).find(key => validRoutes[key] === page);
     if (page === 'not-found') {
       window.history.replaceState(null, '', '/404');
-    } else if (window.location.pathname !== url) {
+    } else if (url && window.location.pathname !== url) {
       window.history.pushState(null, '', url);
     }
   }, [validRoutes]);
