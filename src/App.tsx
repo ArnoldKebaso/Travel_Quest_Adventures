@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Home } from './components/Home';
 import { TravelListings } from './components/TravelListings';
 import { DestinationDetail } from './components/DestinationDetail';
@@ -11,11 +11,12 @@ import { AdminAddGuide } from './components/AdminAddGuide';
 import { AdminCommentModeration } from './components/AdminCommentModeration';
 import { AdminUsers } from './components/AdminUsers';
 import { Navigation } from './components/Navigation';
+import { NotFound } from './components/NotFound';
 import { Toaster } from './components/ui/sonner';
 import { supabase } from './utils/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
-type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users';
+type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -23,6 +24,54 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Valid routes mapping
+  const validRoutes = useMemo(() => ({
+    '/': 'home',
+    '/home': 'home',
+    '/listings': 'listings',
+    '/destination': 'destination',
+    '/account': 'account',
+    '/saved': 'saved',
+    '/auth': 'auth',
+    '/admin-auth': 'admin-auth',
+    '/admin-dashboard': 'admin-dashboard',
+    '/admin-add-guide': 'admin-add-guide',
+    '/admin-comments': 'admin-comments',
+    '/admin-users': 'admin-users'
+  } as Record<string, Page>), []);
+
+  // Function to get page from URL
+  const getPageFromURL = useCallback((): Page => {
+    const pathname = window.location.pathname;
+    
+    // Handle destination with query params
+    if (pathname === '/destination' && window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      const destinationId = params.get('id');
+      if (destinationId) {
+        setSelectedDestination(destinationId);
+      }
+    }
+    
+    return validRoutes[pathname] || 'not-found';
+  }, [validRoutes]);
+
+  // Function to update URL when page changes
+  const updateURL = useCallback((page: Page) => {
+    const url = Object.keys(validRoutes).find(key => validRoutes[key] === page) || '/404';
+    if (page === 'not-found') {
+      window.history.replaceState(null, '', '/404');
+    } else if (window.location.pathname !== url) {
+      window.history.pushState(null, '', url);
+    }
+  }, [validRoutes]);
+
+  // Enhanced setCurrentPage that syncs with URL
+  const navigateToPage = useCallback((page: Page) => {
+    setCurrentPage(page);
+    updateURL(page);
+  }, [updateURL]);
 
   const checkAdminStatus = (currentUser: User | null) => {
     if (!currentUser) return false;
@@ -36,6 +85,18 @@ export default function App() {
   };
 
   useEffect(() => {
+    // Set initial page based on URL
+    const initialPage = getPageFromURL();
+    setCurrentPage(initialPage);
+
+    // Handle browser back/forward navigation
+    const handlePopState = () => {
+      const page = getPageFromURL();
+      setCurrentPage(page);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       const currentUser = session?.user ?? null;
@@ -59,16 +120,16 @@ export default function App() {
       if (event === 'SIGNED_IN' && currentUser) {
         if (adminStatus) {
           // Redirect admin users to admin dashboard
-          setCurrentPage('admin-dashboard');
+          navigateToPage('admin-dashboard');
         } else {
           // Redirect regular users to account page
-          setCurrentPage('account');
+          navigateToPage('account');
         }
       }
 
       // Handle sign out
       if (event === 'SIGNED_OUT') {
-        setCurrentPage('home');
+        navigateToPage('home');
       }
     });
 
@@ -84,14 +145,14 @@ export default function App() {
       // Handle post-login redirection
       if (authEvent === 'SIGNED_IN' && currentUser) {
         if (adminStatus) {
-          setCurrentPage('admin-dashboard');
+          navigateToPage('admin-dashboard');
         } else {
-          setCurrentPage('account');
+          navigateToPage('account');
         }
       }
 
       if (authEvent === 'SIGNED_OUT') {
-        setCurrentPage('home');
+        navigateToPage('home');
       }
     };
 
@@ -101,15 +162,18 @@ export default function App() {
 
     return () => {
       subscription?.unsubscribe();
+      window.removeEventListener('popstate', handlePopState);
       if (typeof window !== 'undefined') {
         window.removeEventListener('supabase-auth-change', handleMockAuthChange);
       }
     };
-  }, []);
+  }, [getPageFromURL, navigateToPage]);
 
   const handleDestinationSelect = (destinationId: string) => {
     setSelectedDestination(destinationId);
     setCurrentPage('destination');
+    // Update URL with destination ID as query parameter
+    window.history.pushState(null, '', `/destination?id=${destinationId}`);
   };
 
   const handleAuthSuccess = () => {
@@ -120,20 +184,20 @@ export default function App() {
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
-        return <Home onDestinationSelect={handleDestinationSelect} onNavigate={setCurrentPage} />;
+        return <Home onDestinationSelect={handleDestinationSelect} onNavigate={navigateToPage} />;
       case 'listings':
         return <TravelListings onDestinationSelect={handleDestinationSelect} />;
       case 'destination':
         return (
           <DestinationDetail 
             destinationId={selectedDestination} 
-            onBack={() => setCurrentPage('listings')} 
+            onBack={() => navigateToPage('listings')} 
             user={user}
           />
         );
       case 'account':
         return user ? (
-          <UserAccount user={user} onNavigate={setCurrentPage} />
+          <UserAccount user={user} onNavigate={navigateToPage} />
         ) : (
           <Auth onAuthSuccess={handleAuthSuccess} />
         );
@@ -149,30 +213,32 @@ export default function App() {
         return <AdminAuth onAuthSuccess={handleAuthSuccess} />;
       case 'admin-dashboard':
         return isAdmin ? (
-          <AdminDashboard onNavigate={setCurrentPage} />
+          <AdminDashboard onNavigate={navigateToPage} />
         ) : (
           <AdminAuth onAuthSuccess={handleAuthSuccess} />
         );
       case 'admin-add-guide':
         return isAdmin ? (
-          <AdminAddGuide onNavigate={setCurrentPage} />
+          <AdminAddGuide onNavigate={navigateToPage} />
         ) : (
           <AdminAuth onAuthSuccess={handleAuthSuccess} />
         );
       case 'admin-comments':
         return isAdmin ? (
-          <AdminCommentModeration onNavigate={setCurrentPage} />
+          <AdminCommentModeration onNavigate={navigateToPage} />
         ) : (
           <AdminAuth onAuthSuccess={handleAuthSuccess} />
         );
       case 'admin-users':
         return isAdmin ? (
-          <AdminUsers onNavigate={setCurrentPage} />
+          <AdminUsers onNavigate={navigateToPage} />
         ) : (
           <AdminAuth onAuthSuccess={handleAuthSuccess} />
         );
+      case 'not-found':
+        return <NotFound onNavigate={navigateToPage} />;
       default:
-        return <Home onDestinationSelect={handleDestinationSelect} onNavigate={setCurrentPage} />;
+        return <NotFound onNavigate={navigateToPage} />;
     }
   };
 
@@ -197,7 +263,7 @@ export default function App() {
       {showNavigation && (
         <Navigation 
           currentPage={currentPage} 
-          onNavigate={setCurrentPage} 
+          onNavigate={navigateToPage} 
           user={user}
           isAdmin={isAdmin}
         />
