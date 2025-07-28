@@ -30,6 +30,7 @@ interface Tour {
 
 interface ToursPageProps {
   onNavigate: (page: Page) => void;
+  onTourSelect: (tourId: string) => void;
   user: User | null;
   isAdmin?: boolean;
 }
@@ -121,7 +122,7 @@ const generateMockTours = (): Tour[] => {
   });
 };
 
-export function ToursPage({ onNavigate, user, isAdmin }: ToursPageProps) {
+export function ToursPage({ onNavigate, onTourSelect, user, isAdmin }: ToursPageProps) {
   const [tours, setTours] = useState<Tour[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRegion, setSelectedRegion] = useState('all');
@@ -367,22 +368,23 @@ export function ToursPage({ onNavigate, user, isAdmin }: ToursPageProps) {
               {currentTours.map((tour, index) => (
                 <Card 
                   key={tour.id} 
-                  className="group overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-xl focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
+                  className="group overflow-hidden cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-xl focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
                   tabIndex={0}
                   role="article"
                   aria-label={`Tour: ${tour.title}`}
                   style={{ animationDelay: `${index * 0.1}s` }}
+                  onClick={() => onTourSelect(tour.id)}
                 >
                   {/* Tour Image */}
                   <div className="aspect-[4/3] overflow-hidden relative">
                     <img
                       src={tour.image}
                       alt={`${tour.title} tour image`}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                     
                     {/* Dark Gradient Overlay on Hover */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     
                     {/* Category Badge */}
                     <div className="absolute top-4 left-4">
@@ -395,10 +397,14 @@ export function ToursPage({ onNavigate, user, isAdmin }: ToursPageProps) {
                     </div>
 
                     {/* View Tour Button (appears on hover) */}
-                    <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-4 group-hover:translate-y-0">
+                    <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
                       <Button 
                         className="w-full bg-white text-gray-900 hover:bg-gray-100"
                         aria-label={`View details for ${tour.title}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onTourSelect(tour.id);
+                        }}
                       >
                         View Tour
                       </Button>
@@ -407,7 +413,7 @@ export function ToursPage({ onNavigate, user, isAdmin }: ToursPageProps) {
 
                   <CardContent className="p-6">
                     {/* Title */}
-                    <h3 className="font-bold text-lg text-gray-900 mb-3 line-clamp-2 group-hover:text-primary transition-colors">
+                    <h3 className="font-bold text-lg text-gray-900 mb-3 line-clamp-2 group-hover:text-primary transition-colors duration-500">
                       {tour.title}
                     </h3>
 
@@ -439,8 +445,12 @@ export function ToursPage({ onNavigate, user, isAdmin }: ToursPageProps) {
                       </div>
                       <Button 
                         variant="outline"
-                        className="group-hover:bg-primary group-hover:text-white transition-colors"
+                        className="group-hover:bg-primary group-hover:text-white transition-colors duration-500"
                         aria-label={`Book ${tour.title} tour`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onTourSelect(tour.id);
+                        }}
                       >
                         View Tour
                       </Button>

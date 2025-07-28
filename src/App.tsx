@@ -31,6 +31,8 @@ type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' |
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
+  const [selectedTourId, setSelectedTourId] = useState<string | null>(null);
+  const [selectedBlogId, setSelectedBlogId] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,6 +71,24 @@ export default function App() {
       const destinationId = params.get('id');
       if (destinationId) {
         setSelectedDestination(destinationId);
+      }
+    }
+    
+    // Handle tour details with query params
+    if (pathname === '/tour-details' && window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      const tourId = params.get('id');
+      if (tourId) {
+        setSelectedTourId(tourId);
+      }
+    }
+    
+    // Handle blog details with query params
+    if (pathname === '/blog-details' && window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      const blogId = params.get('id');
+      if (blogId) {
+        setSelectedBlogId(blogId);
       }
     }
     
@@ -195,6 +215,20 @@ export default function App() {
     window.history.pushState(null, '', `/destination?id=${destinationId}`);
   };
 
+  const handleTourSelect = (tourId: string) => {
+    setSelectedTourId(tourId);
+    setCurrentPage('tour-details');
+    // Update URL with tour ID as query parameter
+    window.history.pushState(null, '', `/tour-details?id=${tourId}`);
+  };
+
+  const handleBlogSelect = (blogId: string) => {
+    setSelectedBlogId(blogId);
+    setCurrentPage('blog-details');
+    // Update URL with blog ID as query parameter
+    window.history.pushState(null, '', `/blog-details?id=${blogId}`);
+  };
+
   const handleAuthSuccess = () => {
     // This will be handled by the auth state change listener
     // but we can add immediate feedback here if needed
@@ -271,13 +305,13 @@ export default function App() {
           <AdminAuth onAuthSuccess={handleAuthSuccess} />
         );
       case 'blogs':
-        return <BlogsPage onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
+        return <BlogsPage onNavigate={navigateToPage} onBlogSelect={handleBlogSelect} user={user} isAdmin={isAdmin} />;
       case 'blog-details':
-        return <BlogDetails blogId="1" onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
+        return <BlogDetails blogId={selectedBlogId || "1"} onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
       case 'tours':
-        return <ToursPage onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
+        return <ToursPage onNavigate={navigateToPage} onTourSelect={handleTourSelect} user={user} isAdmin={isAdmin} />;
       case 'tour-details':
-        return <TourDetails tourId="1" onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
+        return <TourDetails tourId={selectedTourId || "1"} onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
       case 'about':
         return <AboutUs onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
       case 'contact':

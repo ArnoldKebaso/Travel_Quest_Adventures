@@ -30,6 +30,7 @@ interface BlogPost {
 
 interface BlogsPageProps {
   onNavigate: (page: Page) => void;
+  onBlogSelect: (blogId: string) => void;
   user: User | null;
   isAdmin?: boolean;
 }
@@ -124,7 +125,7 @@ const generateMockPosts = (): BlogPost[] => {
   });
 };
 
-export function BlogsPage({ onNavigate, user, isAdmin }: BlogsPageProps) {
+export function BlogsPage({ onNavigate, onBlogSelect, user, isAdmin }: BlogsPageProps) {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -320,23 +321,24 @@ export function BlogsPage({ onNavigate, user, isAdmin }: BlogsPageProps) {
               {currentPosts.map((post, index) => (
                 <Card 
                   key={post.id} 
-                  className="group overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-lg focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
+                  className="group overflow-hidden cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-lg focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
                   tabIndex={0}
                   role="article"
                   aria-label={`Blog post: ${post.title}`}
                   style={{ animationDelay: `${index * 0.1}s` }}
+                  onClick={() => onBlogSelect(post.id)}
                 >
                   {/* Featured Image */}
                   <div className="aspect-video overflow-hidden relative">
                     <img
                       src={post.image}
                       alt={`Featured image for ${post.title}`}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     
                     {/* Title Overlay on Hover */}
-                    <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                       <h3 className="text-white font-semibold text-sm line-clamp-2">
                         {post.title}
                       </h3>
@@ -354,7 +356,7 @@ export function BlogsPage({ onNavigate, user, isAdmin }: BlogsPageProps) {
                     </div>
 
                     {/* Title (visible when not hovering) */}
-                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:opacity-0 transition-opacity duration-300">
+                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:opacity-0 transition-opacity duration-500">
                       {post.title}
                     </h3>
 
@@ -388,8 +390,12 @@ export function BlogsPage({ onNavigate, user, isAdmin }: BlogsPageProps) {
                       <Button 
                         size="sm" 
                         variant="ghost"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                         aria-label={`Read more about ${post.title}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onBlogSelect(post.id);
+                        }}
                       >
                         <ExternalLink className="w-4 h-4" />
                       </Button>

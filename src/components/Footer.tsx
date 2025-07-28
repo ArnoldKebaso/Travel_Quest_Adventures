@@ -23,6 +23,18 @@ export function Footer({ onNavigate }: FooterProps) {
     }
   };
 
+  // Helper for SPA navigation links
+  const navLink = (label: string, page: Page, icon?: React.ReactNode) => (
+    <a
+      href="#"
+      onClick={e => { e.preventDefault(); onNavigate(page); }}
+      className={`text-[#E5E5E5] hover:text-[#FFD1C1] transition-all duration-300 text-sm hover:translate-x-1 inline-flex items-center no-underline`}
+    >
+      {icon && <span className="mr-2">{icon}</span>}
+      {label}
+    </a>
+  );
+
   return (
     <footer className="bg-[#111] text-[#E5E5E5]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -41,7 +53,6 @@ export function Footer({ onNavigate }: FooterProps) {
             <p className="text-[#E5E5E5] text-sm leading-relaxed">
               Discover the breathtaking beauty and rich culture of Australia with our expert guides and unforgettable experiences.
             </p>
-            
             {/* Social Icons */}
             <div className="flex space-x-4">
               <a 
@@ -87,47 +98,11 @@ export function Footer({ onNavigate }: FooterProps) {
           <div className="space-y-6">
             <h3 className="font-bold text-lg text-white">Navigation</h3>
             <ul className="space-y-4">
-              <li>
-                <button 
-                  onClick={() => onNavigate('home')} 
-                  className="text-[#E5E5E5] hover:text-[#FFD1C1] transition-all duration-300 text-sm hover:translate-x-1 inline-block"
-                >
-                  Home
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => onNavigate('listings')} 
-                  className="text-[#E5E5E5] hover:text-[#FFD1C1] transition-all duration-300 text-sm hover:translate-x-1 inline-block"
-                >
-                  Destinations
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => onNavigate('tours')} 
-                  className="text-[#E5E5E5] hover:text-[#FFD1C1] transition-all duration-300 text-sm hover:translate-x-1 inline-block"
-                >
-                  Tours
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => onNavigate('blogs')} 
-                  className="text-[#E5E5E5] hover:text-[#FFD1C1] transition-all duration-300 text-sm hover:translate-x-1 inline-block"
-                >
-                  Blogs
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => onNavigate('saved')} 
-                  className="text-[#E5E5E5] hover:text-[#FFD1C1] transition-all duration-300 text-sm hover:translate-x-1 inline-flex items-center"
-                >
-                  <Heart className="w-4 h-4 mr-2" />
-                  Favorites
-                </button>
-              </li>
+              <li>{navLink('Home', 'home')}</li>
+              <li>{navLink('Destinations', 'listings')}</li>
+              <li>{navLink('Tours', 'tours')}</li>
+              <li>{navLink('Blogs', 'blogs')}</li>
+              <li>{navLink('Favorites', 'saved', <Heart className="w-4 h-4" />)}</li>
             </ul>
           </div>
 
@@ -135,26 +110,12 @@ export function Footer({ onNavigate }: FooterProps) {
           <div className="space-y-6">
             <h3 className="font-bold text-lg text-white">Resources</h3>
             <ul className="space-y-4">
-              <li>
-                <button 
-                  onClick={() => onNavigate('about')} 
-                  className="text-[#E5E5E5] hover:text-[#FFD1C1] transition-all duration-300 text-sm hover:translate-x-1 inline-block"
-                >
-                  About Us
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => onNavigate('contact')} 
-                  className="text-[#E5E5E5] hover:text-[#FFD1C1] transition-all duration-300 text-sm hover:translate-x-1 inline-block"
-                >
-                  Contact
-                </button>
-              </li>
+              <li>{navLink('About Us', 'about')}</li>
+              <li>{navLink('Contact', 'contact')}</li>
               <li>
                 <a 
                   href="#privacy" 
-                  className="text-[#E5E5E5] hover:text-[#FFD1C1] transition-all duration-300 text-sm hover:translate-x-1 inline-block"
+                  className="text-[#E5E5E5] hover:text-[#FFD1C1] transition-all duration-300 text-sm hover:translate-x-1 inline-block no-underline"
                 >
                   Privacy Policy
                 </a>
@@ -162,7 +123,7 @@ export function Footer({ onNavigate }: FooterProps) {
               <li>
                 <a 
                   href="#terms" 
-                  className="text-[#E5E5E5] hover:text-[#FFD1C1] transition-all duration-300 text-sm hover:translate-x-1 inline-block"
+                  className="text-[#E5E5E5] hover:text-[#FFD1C1] transition-all duration-300 text-sm hover:translate-x-1 inline-block no-underline"
                 >
                   Terms of Service
                 </a>
@@ -176,7 +137,6 @@ export function Footer({ onNavigate }: FooterProps) {
             <p className="text-[#E5E5E5] text-sm">
               Get travel tips, exclusive offers, and adventure stories delivered to your inbox.
             </p>
-            
             <form onSubmit={handleEmailSubmit} className="space-y-4">
               <div className="space-y-3">
                 <Input
