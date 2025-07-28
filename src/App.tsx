@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Home } from './components/Home';
 import { Home as NewHome } from './components/NewHome';
 import { TravelListings } from './components/TravelListings';
@@ -17,7 +17,6 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { AdminAddGuide } from './components/AdminAddGuide';
 import { AdminCommentModeration } from './components/AdminCommentModeration';
 import { AdminUsers } from './components/AdminUsers';
-import { Navigation } from './components/Navigation';
 import { NewNavigation } from './components/NewNavigation';
 import { NotFound } from './components/NotFound';
 import { Toaster } from './components/ui/sonner';
@@ -299,23 +298,14 @@ export default function App() {
   return (
     <div className="min-h-screen bg-background">
       {showNavigation && (
-        useNewDesign ? (
-          <NewNavigation 
-            currentPage={currentPage} 
-            onNavigate={navigateToPage} 
-            user={user}
-            isAdmin={isAdmin}
-          />
-        ) : (
-          <Navigation 
-            currentPage={currentPage} 
-            onNavigate={navigateToPage} 
-            user={user}
-            isAdmin={isAdmin}
-          />
-        )
+        <NewNavigation 
+          currentPage={currentPage} 
+          onNavigate={navigateToPage} 
+          user={user}
+          isAdmin={isAdmin}
+        />
       )}
-      <main className={showNavigation && !useNewDesign ? 'pt-16' : ''}>
+      <main className="">
         {renderPage()}
       </main>
       <Toaster />

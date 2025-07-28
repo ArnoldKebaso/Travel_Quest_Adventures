@@ -58,20 +58,20 @@ export function Footer({ onNavigate }: FooterProps) {
                 </button>
               </li>
               <li>
-                <a 
-                  href="#tours" 
+                <button 
+                  onClick={() => onNavigate('tours')} 
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   Tours
-                </a>
+                </button>
               </li>
               <li>
-                <a 
-                  href="#blogs" 
+                <button 
+                  onClick={() => onNavigate('blogs')} 
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   Blogs
-                </a>
+                </button>
               </li>
             </ul>
           </div>
@@ -81,20 +81,20 @@ export function Footer({ onNavigate }: FooterProps) {
             <h3 className="font-bold text-lg mb-4 text-white">Resources</h3>
             <ul className="space-y-2">
               <li>
-                <a 
-                  href="#about" 
+                <button 
+                  onClick={() => onNavigate('about')} 
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   About Us
-                </a>
+                </button>
               </li>
               <li>
-                <a 
-                  href="#contact" 
+                <button 
+                  onClick={() => onNavigate('contact')} 
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   Contact
-                </a>
+                </button>
               </li>
               <li>
                 <a 

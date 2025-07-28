@@ -6,7 +6,7 @@ import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { NewNavigation } from './NewNavigation';
 import { Footer } from './Footer';
-import { Search, Star, Clock, MapPin, Map } from 'lucide-react';
+import { Search, Star, Clock, MapPin, Map, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import type { User } from '@supabase/supabase-js';
 
@@ -72,21 +72,18 @@ const sortOptions = [
 export function NewTravelListings({ onDestinationSelect, onNavigate, user, isAdmin }: TravelListingsProps) {
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedRegion, setSelectedRegion] = useState('All');
   const [sortBy, setSortBy] = useState('rating');
   const [showMap, setShowMap] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(1);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const destinationsPerPage = 8;
 
   // Initial load
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDestinations(generateDestinations(1, 12));
+      setDestinations(generateDestinations(1, 40)); // Generate 40 destinations for pagination
       setIsLoading(false);
     }, 500);
 
@@ -115,59 +112,57 @@ export function NewTravelListings({ onDestinationSelect, onNavigate, user, isAdm
       }
     });
 
-  // Load more destinations
-  const loadMore = useCallback(async () => {
-    if (isLoadingMore || !hasMore) return;
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredDestinations.length / destinationsPerPage);
+  const startIndex = (currentPage - 1) * destinationsPerPage;
+  const endIndex = startIndex + destinationsPerPage;
+  const currentDestinations = filteredDestinations.slice(startIndex, endIndex);
 
-    setIsLoadingMore(true);
-    
-    // Simulate loading
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const newDestinations = generateDestinations(destinations.length + 1, 4);
-    setDestinations(prev => [...prev, ...newDestinations]);
-    setPage(prev => prev + 1);
-    setIsLoadingMore(false);
-
-    // Stop after 5 pages
-    if (page >= 5) {
-      setHasMore(false);
-      toast.info('No more destinations to load');
-    }
-  }, [destinations.length, isLoadingMore, hasMore, page]);
-
-  // Intersection observer for infinite scroll
+  // Reset to first page when filters change
   useEffect(() => {
-    if (observerRef.current) observerRef.current.disconnect();
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory, selectedRegion, sortBy]);
 
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !isLoading) {
-          loadMore();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (loadMoreRef.current) {
-      observerRef.current.observe(loadMoreRef.current);
-    }
-
-    return () => {
-      if (observerRef.current) observerRef.current.disconnect();
-    };
-  }, [loadMore, isLoading]);
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll to top of destinations grid
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleResetFilters = () => {
     setSearchTerm('');
     setSelectedCategory('All');
     setSelectedRegion('All');
     setSortBy('rating');
+    setCurrentPage(1);
     toast.success('Filters reset');
   };
 
   const handleDestinationClick = (destinationId: string) => {
     onDestinationSelect(destinationId);
+  };
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages if total is small
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show pages around current page
+      const start = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+      const end = Math.min(totalPages, start + maxVisiblePages - 1);
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+    }
+    
+    return pages;
   };
 
   return (
@@ -268,10 +263,17 @@ export function NewTravelListings({ onDestinationSelect, onNavigate, user, isAdm
                 </Button>
               </div>
             ) : (
-              // Destinations grid
+              // Destinations grid with pagination
               <>
+                {/* Results count */}
+                <div className="flex justify-between items-center mb-6">
+                  <p className="text-gray-600">
+                    Showing {startIndex + 1}-{Math.min(endIndex, filteredDestinations.length)} of {filteredDestinations.length} destinations
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {filteredDestinations.map((destination) => (
+                  {currentDestinations.map((destination) => (
                     <Card
                       key={destination.id}
                       className="group cursor-pointer overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.03]"
@@ -334,23 +336,51 @@ export function NewTravelListings({ onDestinationSelect, onNavigate, user, isAdm
                   ))}
                 </div>
 
-                {/* Load more trigger */}
-                <div ref={loadMoreRef} className="py-8">
-                  {isLoadingMore && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                      {Array.from({ length: 4 }).map((_, index) => (
-                        <Card key={index} className="overflow-hidden">
-                          <div className="bg-gray-200 animate-pulse h-48 w-full" />
-                          <CardContent className="p-4">
-                            <div className="bg-gray-200 animate-pulse h-4 w-3/4 mb-2" />
-                            <div className="bg-gray-200 animate-pulse h-3 w-full mb-1" />
-                            <div className="bg-gray-200 animate-pulse h-3 w-2/3" />
-                          </CardContent>
-                        </Card>
-                      ))}
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center mt-8">
+                    <div className="flex items-center space-x-2">
+                      {/* Previous button */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="flex items-center space-x-1"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                        <span>Previous</span>
+                      </Button>
+
+                      {/* Page numbers */}
+                      <div className="flex items-center space-x-1">
+                        {getPageNumbers().map((pageNum) => (
+                          <Button
+                            key={pageNum}
+                            variant={pageNum === currentPage ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handlePageChange(pageNum)}
+                            className="w-10 h-10"
+                          >
+                            {pageNum}
+                          </Button>
+                        ))}
+                      </div>
+
+                      {/* Next button */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="flex items-center space-x-1"
+                      >
+                        <span>Next</span>
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </>
             )}
           </div>
