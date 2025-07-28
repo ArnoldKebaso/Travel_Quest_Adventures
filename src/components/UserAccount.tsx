@@ -287,7 +287,7 @@ export function UserAccount({ user, onNavigate }: UserAccountProps) {
               <form onSubmit={isSignIn ? handleSignIn : handleSignUp} className="space-y-4">
                 {!isSignIn && (
                   <div>
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="name">Full Names</Label>
                     <Input
                       id="name"
                       name="name"
@@ -295,7 +295,7 @@ export function UserAccount({ user, onNavigate }: UserAccountProps) {
                       value={formData.name}
                       onChange={handleInputChange}
                       required
-                      className="mt-1"
+                      className="mt-5"
                       disabled={isLoading}
                     />
                   </div>
@@ -310,7 +310,7 @@ export function UserAccount({ user, onNavigate }: UserAccountProps) {
                     value={formData.email}
                     onChange={handleInputChange}
                     required
-                    className="mt-1"
+                    className="mt-2"
                     disabled={isLoading}
                   />
                 </div>
@@ -324,7 +324,7 @@ export function UserAccount({ user, onNavigate }: UserAccountProps) {
                     value={formData.password}
                     onChange={handleInputChange}
                     required
-                    className="mt-1"
+                    className="mt-2"
                     disabled={isLoading}
                   />
                 </div>
@@ -339,7 +339,7 @@ export function UserAccount({ user, onNavigate }: UserAccountProps) {
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
                       required
-                      className="mt-1"
+                      className="mt-2"
                       disabled={isLoading}
                     />
                   </div>
