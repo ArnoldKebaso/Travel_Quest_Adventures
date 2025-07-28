@@ -1,11 +1,14 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Skeleton } from './ui/skeleton';
+import { ImageWithFallback } from './figma/ImageWithFallback';
 import { NewNavigation } from './NewNavigation';
 import { Footer } from './Footer';
-import { HeartOff, Luggage } from 'lucide-react';
+import { Star, Clock, Loader2, Heart, Trash2, HeartOff, Suitcase } from 'lucide-react';
+import { projectId } from '../utils/supabase/info';
+import { supabase } from '../utils/supabase/client';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import type { User } from '@supabase/supabase-js';
@@ -130,7 +133,7 @@ export function SavedDestinations({
         </p>
         {onNavigate && (
           <Button onClick={() => onNavigate('listings')} className="inline-flex items-center gap-2">
-            <Luggage className="w-4 h-4" />
+            <Suitcase className="w-4 h-4" />
             Browse Destinations
           </Button>
         )}
