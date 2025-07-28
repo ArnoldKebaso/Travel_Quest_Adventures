@@ -8,10 +8,9 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { NewNavigation } from './NewNavigation';
 import { Footer } from './Footer';
 import { Search, Calendar, ExternalLink, PenTool, ChevronLeft, ChevronRight } from 'lucide-react';
-import { toast } from 'sonner';
 import type { User } from '@supabase/supabase-js';
 
-type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact';
+type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
 
 interface BlogPost {
   id: string;
