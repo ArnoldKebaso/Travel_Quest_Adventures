@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Home } from './components/Home';
 import { Home as NewHome } from './components/NewHome';
 import { TravelListings } from './components/TravelListings';
+import { NewTravelListings } from './components/NewTravelListings';
 import { DestinationDetail } from './components/DestinationDetail';
+import { NewDestinationDetail } from './components/NewDestinationDetail';
 import { UserAccount } from './components/UserAccount';
 import { SavedDestinations } from './components/SavedDestinations';
 import { Auth } from './components/Auth';
@@ -26,7 +28,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [useNewDesign, setUseNewDesign] = useState(true); // Toggle for new design
+  const useNewDesign = true; // Using new modern design
 
   // Valid routes mapping
   const validRoutes = useMemo(() => ({
@@ -137,8 +139,9 @@ export default function App() {
     });
 
     // Listen for mock auth changes (for demo mode)
-    const handleMockAuthChange = (event: any) => {
-      const { event: authEvent, session } = event.detail;
+    const handleMockAuthChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { event: authEvent, session } = customEvent.detail;
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       
@@ -193,9 +196,21 @@ export default function App() {
           <Home onDestinationSelect={handleDestinationSelect} onNavigate={navigateToPage} />
         );
       case 'listings':
-        return <TravelListings onDestinationSelect={handleDestinationSelect} />;
+        return useNewDesign ? (
+          <NewTravelListings onDestinationSelect={handleDestinationSelect} onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />
+        ) : (
+          <TravelListings onDestinationSelect={handleDestinationSelect} />
+        );
       case 'destination':
-        return (
+        return useNewDesign ? (
+          <NewDestinationDetail 
+            destinationId={selectedDestination} 
+            onBack={() => navigateToPage('listings')} 
+            onNavigate={navigateToPage}
+            user={user}
+            isAdmin={isAdmin}
+          />
+        ) : (
           <DestinationDetail 
             destinationId={selectedDestination} 
             onBack={() => navigateToPage('listings')} 
