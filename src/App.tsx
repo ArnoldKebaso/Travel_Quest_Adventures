@@ -5,6 +5,10 @@ import { TravelListings } from './components/TravelListings';
 import { NewTravelListings } from './components/NewTravelListings';
 import { DestinationDetail } from './components/DestinationDetail';
 import { NewDestinationDetail } from './components/NewDestinationDetail';
+import { BlogsPage } from './components/BlogsPage';
+import { ToursPage } from './components/ToursPage';
+import { AboutUs } from './components/AboutUs';
+import { ContactPage } from './components/ContactPage';
 import { UserAccount } from './components/UserAccount';
 import { SavedDestinations } from './components/SavedDestinations';
 import { Auth } from './components/Auth';
@@ -20,7 +24,7 @@ import { Toaster } from './components/ui/sonner';
 import { supabase } from './utils/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
-type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found';
+type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -36,6 +40,10 @@ export default function App() {
     '/home': 'home',
     '/listings': 'listings',
     '/destination': 'destination',
+    '/blogs': 'blogs',
+    '/tours': 'tours',
+    '/about': 'about',
+    '/contact': 'contact',
     '/account': 'account',
     '/saved': 'saved',
     '/auth': 'auth',
@@ -257,6 +265,14 @@ export default function App() {
         ) : (
           <AdminAuth onAuthSuccess={handleAuthSuccess} />
         );
+      case 'blogs':
+        return <BlogsPage onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
+      case 'tours':
+        return <ToursPage onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
+      case 'about':
+        return <AboutUs onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
+      case 'contact':
+        return <ContactPage onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
       case 'not-found':
         return <NotFound onNavigate={navigateToPage} />;
       default:

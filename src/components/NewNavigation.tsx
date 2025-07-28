@@ -14,7 +14,7 @@ import { supabase } from '../utils/supabase/client';
 import { toast } from 'sonner';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
-type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found';
+type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact';
 
 interface NavigationProps {
   currentPage: Page;
@@ -27,9 +27,10 @@ interface NavigationProps {
 const navItems = [
   { label: 'Home', page: 'home' as Page },
   { label: 'Destinations', page: 'listings' as Page },
-  { label: 'Tours', page: 'listings' as Page }, // Can point to different page later
-  { label: 'Blogs', page: 'listings' as Page }, // Can point to different page later
-  { label: 'Contact', page: 'home' as Page } // Scrolls to contact section
+  { label: 'Tours', page: 'tours' as Page },
+  { label: 'Blogs', page: 'blogs' as Page },
+  { label: 'About', page: 'about' as Page },
+  { label: 'Contact', page: 'contact' as Page }
 ];
 
 export function NewNavigation({ currentPage, onNavigate, user, isAdmin }: NavigationProps) {
