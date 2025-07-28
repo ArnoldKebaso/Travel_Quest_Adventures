@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from './ui/button';
+import { Badge } from './ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { 
@@ -9,43 +10,106 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from './ui/dropdown-menu';
-import { User, Menu, LogOut, Heart, Shield, Sun, Moon } from 'lucide-react';
+import { User, Menu, LogOut, Heart, Shield } from 'lucide-react';
+import { ThemeToggle } from './ThemeToggle';
 import { supabase } from '../utils/supabase/client';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
-type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact';
+type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
 
-interface NavigationProps {
+interface NewNavigationProps {
   currentPage: Page;
   onNavigate: (page: Page) => void;
   user: SupabaseUser | null;
   isAdmin?: boolean;
 }
 
-// Navigation items
-const navItems = [
-  { label: 'Home', page: 'home' as Page },
-  { label: 'Destinations', page: 'listings' as Page },
-  { label: 'Tours', page: 'tours' as Page },
-  { label: 'Blogs', page: 'blogs' as Page },
-  { label: 'About', page: 'about' as Page },
-  { label: 'Contact', page: 'contact' as Page }
-];
-
-export function NewNavigation({ currentPage, onNavigate, user, isAdmin }: NavigationProps) {
+export function NewNavigation({ currentPage, onNavigate, user, isAdmin }: NewNavigationProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  // Check for dark mode preference on mount
-  useEffect(() => {
-    const isDark = document.documentElement.classList.contains('dark');
-    setIsDarkMode(isDark);
-  }, []);
+  const [savedCount] = useState(3); // Mock saved count - in real app, get from user's saved destinations
 
   const handleSignIn = () => {
     onNavigate('auth');
-    setIsOpen(false);
+  };
+
+  const handleAdminSignIn = () => {
+    onNavigate('admin-auth');
+  };
+
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      onNavigate('home');
+      toast.success('Signed out successfully');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast.error('Failed to sign out');
+    }
+  };
+
+  const navItems = [
+    { label: 'Home', page: 'home' as Page },
+    { label: 'Destinations', page: 'listings' as Page },
+    { label: 'Tours', page: 'tours' as Page },
+    { label: 'Blogs', page: 'blogs' as Page },
+    { label: 'About', page: 'about' as Page },
+    { label: 'Contact', page: 'contact' as Page },
+  ];
+
+  const adminNavItems = [
+    { label: 'Dashboard', page: 'admin-dashboard' as Page },
+    { label: 'Add Guide', page: 'admin-add-guide' as Page },
+    { label: 'Comments', page: 'admin-comments' as Page },
+    { label: 'Users', page: 'admin-users' as Page },
+  ];
+
+  const isAdminPage = currentPage.startsWith('admin-');
+
+  // Function to render nav items with responsive behavior
+  const renderNavItems = (items: typeof navItems, isMobile = false) => {
+    if (isMobile) {
+      return items.map((item, index) => (
+        <motion.button
+          key={item.page}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: index * 0.1, duration: 0.3 }}
+          onClick={() => {
+            onNavigate(item.page);
+            setIsOpen(false);
+          }}
+          className={`text-left px-4 py-3 text-lg font-medium cursor-pointer transition-colors rounded-lg ${
+            currentPage === item.page 
+              ? 'text-primary bg-primary/10 dark:bg-primary/20' 
+              : 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800'
+          }`}
+        >
+          {item.label}
+        </motion.button>
+      ));
+    }
+
+    // For desktop, show all items with responsive wrapping
+    return (
+      <div className="flex items-center space-x-1 md:space-x-4 flex-wrap">
+        {items.map((item) => (
+          <button
+            key={item.page}
+            onClick={() => onNavigate(item.page)}
+            className={`px-2 md:px-3 py-2 text-sm font-medium cursor-pointer transition-colors whitespace-nowrap rounded-md ${
+              currentPage === item.page 
+                ? 'text-primary bg-primary/10 dark:bg-primary/20' 
+                : 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800'
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+    );
   };
 
   const handleAdminAccess = () => {
