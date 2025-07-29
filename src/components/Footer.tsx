@@ -128,6 +128,15 @@ export function Footer({ onNavigate }: FooterProps) {
                   Terms of Service
                 </a>
               </li>
+              <li>
+                <a 
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); onNavigate('admin-auth'); }}
+                  className="text-[#E5E5E5] hover:text-[#FFD1C1] transition-all duration-300 text-sm hover:translate-x-1 inline-block no-underline cursor-pointer"
+                >
+                  Admin Portal
+                </a>
+              </li>
             </ul>
           </div>
 
