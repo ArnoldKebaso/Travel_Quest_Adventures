@@ -128,6 +128,7 @@ export function Footer({ onNavigate }: FooterProps) {
                   Terms of Service
                 </a>
               </li>
+              <li>{navLink('Admin Portal', 'admin-auth')}</li>
             </ul>
           </div>
 

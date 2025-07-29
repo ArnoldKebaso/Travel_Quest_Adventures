@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
@@ -32,10 +32,6 @@ export function NewNavigation({ currentPage, onNavigate, user, isAdmin }: NewNav
 
   const handleSignIn = () => {
     onNavigate('auth');
-  };
-
-  const handleAdminSignIn = () => {
-    onNavigate('admin-auth');
   };
 
   const handleSignOut = async () => {
@@ -133,7 +129,7 @@ export function NewNavigation({ currentPage, onNavigate, user, isAdmin }: NewNav
               onClick={() => onNavigate('home')}
               className="flex items-center space-x-2 cursor-pointer group"
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center group-hover:shadow-lg transition-shadow">
+              <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center group-hover:shadow-lg transition-shadow">
                 <span className="text-white font-bold text-sm">TQ</span>
               </div>
               <span className="hidden sm:block font-bold text-gray-900 dark:text-white">TravelQuest</span>
@@ -247,17 +243,6 @@ export function NewNavigation({ currentPage, onNavigate, user, isAdmin }: NewNav
               <div className="hidden sm:flex items-center space-x-2">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={handleAdminSignIn} 
-                    className="cursor-pointer text-xs"
-                  >
-                    <Shield className="w-3 h-3 mr-1" />
-                    Admin
-                  </Button>
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button 
                     onClick={handleSignIn} 
                     className="bg-primary hover:bg-primary/90 cursor-pointer"
                   >
@@ -321,17 +306,6 @@ export function NewNavigation({ currentPage, onNavigate, user, isAdmin }: NewNav
                         className="w-full bg-primary hover:bg-primary/90 cursor-pointer"
                       >
                         Sign In
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        onClick={() => {
-                          handleAdminSignIn();
-                          setIsOpen(false);
-                        }}
-                        className="w-full cursor-pointer"
-                      >
-                        <Shield className="w-4 h-4 mr-2" />
-                        Admin Login
                       </Button>
                     </motion.div>
                   )}
