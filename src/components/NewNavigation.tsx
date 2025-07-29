@@ -129,7 +129,7 @@ export function NewNavigation({ currentPage, onNavigate, user, isAdmin }: NewNav
               onClick={() => onNavigate('home')}
               className="flex items-center space-x-2 cursor-pointer group"
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center group-hover:shadow-lg transition-shadow">
+              <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center group-hover:shadow-lg transition-shadow">
                 <span className="text-white font-bold text-sm">TQ</span>
               </div>
               <span className="hidden sm:block font-bold text-gray-900 dark:text-white">TravelQuest</span>
