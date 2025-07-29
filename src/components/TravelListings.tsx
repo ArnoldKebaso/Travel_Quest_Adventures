@@ -196,7 +196,7 @@ export function TravelListings({ onDestinationSelect }: TravelListingsProps) {
           {filteredDestinations.map((destination) => (
             <Card 
               key={destination.id} 
-              className="group cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              className="group cursor-pointer hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1"
               onClick={() => onDestinationSelect(destination.id)}
             >
               <CardContent className="p-0">
@@ -204,7 +204,7 @@ export function TravelListings({ onDestinationSelect }: TravelListingsProps) {
                   <ImageWithFallback
                     src={destination.images[0] || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600&h=400&fit=crop'}
                     alt={destination.name}
-                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-700"
                   />
                   <Badge className="absolute top-4 left-4 bg-white/90 text-black">
                     {destination.category}

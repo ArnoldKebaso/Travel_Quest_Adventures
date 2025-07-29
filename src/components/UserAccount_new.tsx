@@ -1,16 +1,21 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Badge } from './ui/badge';
 import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
+import { Skeleton } from './ui/skeleton';
 import { Textarea } from './ui/textarea';
+import { ImageWithFallback } from './figma/ImageWithFallback';
 import { NewNavigation } from './NewNavigation';
 import { Footer } from './Footer';
 import { SavedDestinations } from './SavedDestinations';
-import { Edit2, Trash2, Check, X, Star } from 'lucide-react';
+import { User, Mail, Lock, MapPin, Heart, Calendar, Star, Settings, LogOut, Loader2, Edit2, Trash2, Check, X } from 'lucide-react';
+import { supabase } from '../utils/supabase/client';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
@@ -37,6 +42,35 @@ interface SavedTripsItem {
   region: string;
   image: string;
   savedDate: string;
+}
+
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  memberSince: string;
+  totalTrips: number;
+  reviewsCount: number;
+}
+
+interface Booking {
+  id: string;
+  destinationId: string;
+  destinationName: string;
+  destinationImage: string;
+  checkIn: string;
+  checkOut: string;
+  guests: number;
+  status: string;
+  bookingDate: string;
+  canReview: boolean;
+}
+
+interface SavedDestination {
+  id: string;
+  name: string;
+  image: string;
+  category: string;
 }
 
 export function UserAccount({ user, onNavigate, isAdmin }: UserAccountProps) {
@@ -328,7 +362,7 @@ export function UserAccount({ user, onNavigate, isAdmin }: UserAccountProps) {
               >
                 <SavedDestinations 
                   user={user}
-                  onDestinationSelect={() => onNavigate('destination')}
+                  onDestinationSelect={(id) => onNavigate('destination')}
                   savedItems={savedItems}
                   showNavigation={false}
                 />

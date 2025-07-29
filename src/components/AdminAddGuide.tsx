@@ -6,13 +6,18 @@ import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from './ui/breadcrumb';
+import { NewNavigation } from './NewNavigation';
+import { Footer } from './Footer';
 import { ChevronRight, Upload, ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
-type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users';
+type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
 
 interface AdminAddGuideProps {
   onNavigate: (page: Page) => void;
+  user?: SupabaseUser | null;
+  isAdmin?: boolean;
 }
 
 interface FormData {
@@ -30,7 +35,7 @@ interface FormErrors {
   category?: string;
 }
 
-export function AdminAddGuide({ onNavigate }: AdminAddGuideProps) {
+export function AdminAddGuide({ onNavigate, user, isAdmin }: AdminAddGuideProps) {
   const [formData, setFormData] = useState<FormData>({
     title: '',
     content: '',
@@ -115,6 +120,13 @@ export function AdminAddGuide({ onNavigate }: AdminAddGuideProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <NewNavigation 
+        currentPage="admin-add-guide" 
+        onNavigate={onNavigate} 
+        user={user || null}
+        isAdmin={isAdmin}
+      />
+      
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <div className="mb-6">
@@ -315,6 +327,8 @@ export function AdminAddGuide({ onNavigate }: AdminAddGuideProps) {
           </CardContent>
         </Card>
       </div>
+      
+      <Footer onNavigate={onNavigate} />
     </div>
   );
 }

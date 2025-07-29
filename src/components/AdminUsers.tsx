@@ -8,13 +8,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Label } from './ui/label';
+import { NewNavigation } from './NewNavigation';
+import { Footer } from './Footer';
 import { Search, UserPlus, Trash2, UserX, Shield, User } from 'lucide-react';
 import { toast } from 'sonner';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
-type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users';
+type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
 
 interface AdminUsersProps {
   onNavigate: (page: Page) => void;
+  user?: SupabaseUser | null;
+  isAdmin?: boolean;
 }
 
 interface UserData {
@@ -32,7 +37,7 @@ interface InviteFormData {
   role: 'User' | 'Admin';
 }
 
-export function AdminUsers({ onNavigate }: AdminUsersProps) {
+export function AdminUsers({ onNavigate, user, isAdmin }: AdminUsersProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviteForm, setInviteForm] = useState<InviteFormData>({ email: '', role: 'User' });
@@ -167,6 +172,13 @@ export function AdminUsers({ onNavigate }: AdminUsersProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <NewNavigation 
+        currentPage="admin-users" 
+        onNavigate={onNavigate} 
+        user={user || null}
+        isAdmin={isAdmin}
+      />
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -397,6 +409,8 @@ export function AdminUsers({ onNavigate }: AdminUsersProps) {
           </CardContent>
         </Card>
       </div>
+      
+      <Footer onNavigate={onNavigate} />
     </div>
   );
 }

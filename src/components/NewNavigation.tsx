@@ -10,28 +10,24 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from './ui/dropdown-menu';
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from './ui/popover';
-import { User, Menu, LogOut, Heart, Shield, MoreHorizontal, Moon, Sun } from 'lucide-react';
+import { User, Menu, LogOut, Heart, Shield } from 'lucide-react';
+import { ThemeToggle } from './ThemeToggle';
 import { supabase } from '../utils/supabase/client';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
-type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact';
+type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
 
-interface NavigationProps {
+interface NewNavigationProps {
   currentPage: Page;
   onNavigate: (page: Page) => void;
   user: SupabaseUser | null;
   isAdmin?: boolean;
 }
 
-export function Navigation({ currentPage, onNavigate, user, isAdmin }: NavigationProps) {
+export function NewNavigation({ currentPage, onNavigate, user, isAdmin }: NewNavigationProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [savedCount] = useState(3); // Mock saved count - in real app, get from user's saved destinations
 
   const handleSignIn = () => {
@@ -52,12 +48,6 @@ export function Navigation({ currentPage, onNavigate, user, isAdmin }: Navigatio
       console.error('Error signing out:', error);
       toast.error('Failed to sign out');
     }
-  };
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    // In a real app, you'd implement actual dark mode logic here
-    toast.info('Dark mode toggle coming soon!');
   };
 
   const navItems = [
@@ -81,147 +71,137 @@ export function Navigation({ currentPage, onNavigate, user, isAdmin }: Navigatio
   // Function to render nav items with responsive behavior
   const renderNavItems = (items: typeof navItems, isMobile = false) => {
     if (isMobile) {
-      return items.map((item) => (
-        <button
+      return items.map((item, index) => (
+        <motion.button
           key={item.page}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: index * 0.1, duration: 0.3 }}
           onClick={() => {
             onNavigate(item.page);
             setIsOpen(false);
           }}
-          className={`text-left px-4 py-3 text-lg font-medium cursor-pointer transition-all duration-200 rounded-lg ${
+          className={`text-left px-4 py-3 text-lg font-medium cursor-pointer transition-colors rounded-lg ${
             currentPage === item.page 
-              ? 'text-orange-500 bg-orange-50' 
-              : 'text-gray-700 hover:text-orange-500 hover:bg-gray-50'
+              ? 'text-primary bg-primary/10 dark:bg-primary/20' 
+              : 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800'
           }`}
         >
           {item.label}
-        </button>
+        </motion.button>
       ));
     }
 
-    // For desktop, show first 4 items, rest in overflow menu
-    const visibleItems = items.slice(0, 4);
-    const overflowItems = items.slice(4);
-
+    // For desktop, show all items with responsive wrapping
     return (
-      <>
-        {visibleItems.map((item) => (
+      <div className="flex items-center space-x-1 md:space-x-4 flex-wrap">
+        {items.map((item) => (
           <button
             key={item.page}
             onClick={() => onNavigate(item.page)}
-            className={`px-4 py-2 text-sm font-medium cursor-pointer transition-all duration-200 whitespace-nowrap rounded-md hover:bg-gray-50 ${
+            className={`px-2 md:px-3 py-2 text-sm font-medium cursor-pointer transition-colors whitespace-nowrap rounded-md ${
               currentPage === item.page 
-                ? 'text-orange-500 bg-orange-50' 
-                : 'text-gray-700 hover:text-orange-500'
+                ? 'text-primary bg-primary/10 dark:bg-primary/20' 
+                : 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800'
             }`}
           >
             {item.label}
           </button>
         ))}
-        
-        {overflowItems.length > 0 && (
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className="px-3 hover:bg-gray-50">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-48" align="end">
-              <div className="space-y-1">
-                {overflowItems.map((item) => (
-                  <button
-                    key={item.page}
-                    onClick={() => onNavigate(item.page)}
-                    className={`w-full text-left px-3 py-2 text-sm cursor-pointer transition-all duration-200 rounded-md ${
-                      currentPage === item.page 
-                        ? 'text-orange-500 bg-orange-50' 
-                        : 'text-gray-700 hover:text-orange-500 hover:bg-gray-50'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-        )}
-      </>
+      </div>
     );
   };
 
+
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 h-16 shadow-sm">
+    <motion.nav 
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 h-16"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="flex items-center">
+          <motion.div 
+            className="flex items-center"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
             <button
               onClick={() => onNavigate('home')}
-              className="flex items-center space-x-3 cursor-pointer group transition-all duration-200 hover:scale-105"
+              className="flex items-center space-x-2 cursor-pointer group"
             >
-              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center group-hover:bg-orange-600 transition-colors duration-200">
+              <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center group-hover:shadow-lg transition-shadow">
                 <span className="text-white font-bold text-sm">TQ</span>
               </div>
-              <span className="hidden sm:block font-bold text-gray-900 group-hover:text-orange-500 transition-colors duration-200">TravelQuest</span>
+              <span className="hidden sm:block font-bold text-gray-900 dark:text-white">TravelQuest</span>
             </button>
-          </div>
+          </motion.div>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-2 overflow-x-auto scrollbar-hide">
+          <div className="hidden md:flex items-center justify-center flex-1 mx-8">
             {!isAdminPage ? renderNavItems(navItems) : renderNavItems(adminNavItems)}
           </div>
 
-          {/* Favorites Button - Desktop */}
-          {!isAdminPage && (
-            <div className="hidden lg:block">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onNavigate('saved')}
-                className="relative cursor-pointer hover:bg-orange-50 transition-all duration-200"
-              >
-                <Heart className="h-5 w-5 text-gray-600 hover:text-orange-500 transition-colors duration-200" />
-                {savedCount > 0 && (
-                  <Badge 
-                    variant="destructive" 
-                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs animate-pulse"
+          {/* Right Side Controls */}
+          <div className="flex items-center space-x-2">
+            {/* Favorites Button - Desktop Only */}
+            {!isAdminPage && (
+              <div className="hidden lg:block">
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onNavigate('saved')}
+                    className="relative cursor-pointer"
+                    aria-label="View saved destinations"
                   >
-                    {savedCount}
-                  </Badge>
-                )}
-              </Button>
-            </div>
-          )}
+                    <Heart className="h-5 w-5" />
+                    {savedCount > 0 && (
+                      <Badge 
+                        variant="destructive" 
+                        className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                      >
+                        {savedCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </motion.div>
+              </div>
+            )}
 
-          {/* User Menu & Controls */}
-          <div className="flex items-center space-x-3">
+            {/* Admin Badge */}
             {isAdmin && (
-              <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-200">
-                <Shield className="w-3 h-3 mr-1" />
-                Admin
-              </Badge>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", duration: 0.5 }}
+              >
+                <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-700">
+                  <Shield className="w-3 h-3 mr-1" />
+                  Admin
+                </Badge>
+              </motion.div>
             )}
             
-            {/* Dark Mode Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleDarkMode}
-              className="cursor-pointer hover:bg-gray-50 transition-all duration-200"
-            >
-              {isDarkMode ? <Sun className="h-4 w-4 text-gray-600" /> : <Moon className="h-4 w-4 text-gray-600" />}
-            </Button>
+            {/* Theme Toggle */}
+            <ThemeToggle />
             
+            {/* User Menu */}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full cursor-pointer hover:bg-gray-50 transition-all duration-200">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-orange-100 text-orange-700">
-                        {user.email?.[0]?.toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full cursor-pointer">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-primary/10 text-primary dark:bg-primary/20">
+                          {user.email?.[0]?.toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </motion.div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <div className="flex items-center justify-start gap-2 p-2">
@@ -264,44 +244,55 @@ export function Navigation({ currentPage, onNavigate, user, isAdmin }: Navigatio
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="flex items-center space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleAdminSignIn} 
-                  className="cursor-pointer text-xs hover:bg-gray-50 transition-all duration-200"
-                >
-                  <Shield className="w-3 h-3 mr-1" />
-                  Admin
-                </Button>
-                <Button 
-                  onClick={handleSignIn} 
-                  className="bg-orange-500 hover:bg-orange-600 cursor-pointer transition-all duration-200 hover:scale-105"
-                >
-                  Sign In
-                </Button>
+              <div className="hidden sm:flex items-center space-x-2">
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleAdminSignIn} 
+                    className="cursor-pointer text-xs"
+                  >
+                    <Shield className="w-3 h-3 mr-1" />
+                    Admin
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button 
+                    onClick={handleSignIn} 
+                    className="bg-primary hover:bg-primary/90 cursor-pointer"
+                  >
+                    Sign In
+                  </Button>
+                </motion.div>
               </div>
             )}
 
             {/* Mobile menu button */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden cursor-pointer hover:bg-gray-50 transition-all duration-200">
-                  <Menu className="h-6 w-6" />
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button variant="ghost" size="icon" className="md:hidden cursor-pointer">
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </motion.div>
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <div className="flex flex-col space-y-4 mt-8">
                   {/* Mobile Favorites Button */}
                   {!isAdminPage && (
-                    <div className="pb-4 border-b">
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="pb-4 border-b border-gray-200 dark:border-gray-700"
+                    >
                       <Button
                         onClick={() => {
                           onNavigate('saved');
                           setIsOpen(false);
                         }}
                         variant="outline"
-                        className="w-full justify-start cursor-pointer hover:bg-orange-50 transition-all duration-200"
+                        className="w-full justify-start cursor-pointer"
                       >
                         <Heart className="mr-2 h-4 w-4" />
                         Favorites
@@ -311,17 +302,23 @@ export function Navigation({ currentPage, onNavigate, user, isAdmin }: Navigatio
                           </Badge>
                         )}
                       </Button>
-                    </div>
+                    </motion.div>
                   )}
 
+                  {/* Mobile Auth Buttons */}
                   {!user && (
-                    <div className="space-y-2 pb-4 border-b">
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1, duration: 0.3 }}
+                      className="space-y-2 pb-4 border-b border-gray-200 dark:border-gray-700"
+                    >
                       <Button 
                         onClick={() => {
                           handleSignIn();
                           setIsOpen(false);
                         }}
-                        className="w-full bg-orange-500 hover:bg-orange-600 cursor-pointer transition-all duration-200"
+                        className="w-full bg-primary hover:bg-primary/90 cursor-pointer"
                       >
                         Sign In
                       </Button>
@@ -331,27 +328,38 @@ export function Navigation({ currentPage, onNavigate, user, isAdmin }: Navigatio
                           handleAdminSignIn();
                           setIsOpen(false);
                         }}
-                        className="w-full cursor-pointer hover:bg-gray-50 transition-all duration-200"
+                        className="w-full cursor-pointer"
                       >
                         <Shield className="w-4 h-4 mr-2" />
                         Admin Login
                       </Button>
-                    </div>
+                    </motion.div>
                   )}
                   
                   {/* Navigation Items */}
-                  <div className="space-y-1">
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2, duration: 0.3 }}
+                    className="space-y-1"
+                  >
                     {!isAdminPage ? renderNavItems(navItems, true) : renderNavItems(adminNavItems, true)}
-                  </div>
+                  </motion.div>
 
+                  {/* User Menu Items */}
                   {user && (
-                    <div className="pt-4 border-t space-y-1">
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3, duration: 0.3 }}
+                      className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-1"
+                    >
                       <button
                         onClick={() => {
                           onNavigate('account');
                           setIsOpen(false);
                         }}
-                        className="text-left px-4 py-3 text-lg font-medium cursor-pointer text-gray-700 hover:text-orange-500 hover:bg-gray-50 w-full rounded-lg transition-all duration-200"
+                        className="text-left px-4 py-3 text-lg font-medium cursor-pointer text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800 w-full rounded-lg transition-colors"
                       >
                         Account
                       </button>
@@ -361,7 +369,7 @@ export function Navigation({ currentPage, onNavigate, user, isAdmin }: Navigatio
                             onNavigate(isAdminPage ? 'home' : 'admin-dashboard');
                             setIsOpen(false);
                           }}
-                          className="text-left px-4 py-3 text-lg font-medium cursor-pointer text-gray-700 hover:text-orange-500 hover:bg-gray-50 w-full rounded-lg transition-all duration-200"
+                          className="text-left px-4 py-3 text-lg font-medium cursor-pointer text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800 w-full rounded-lg transition-colors"
                         >
                           {isAdminPage ? 'Exit Admin' : 'Admin Dashboard'}
                         </button>
@@ -371,11 +379,11 @@ export function Navigation({ currentPage, onNavigate, user, isAdmin }: Navigatio
                           handleSignOut();
                           setIsOpen(false);
                         }}
-                        className="text-left px-4 py-3 text-lg font-medium cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50 w-full rounded-lg transition-all duration-200"
+                        className="text-left px-4 py-3 text-lg font-medium cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 w-full rounded-lg transition-colors"
                       >
                         Sign Out
                       </button>
-                    </div>
+                    </motion.div>
                   )}
                 </div>
               </SheetContent>
@@ -383,6 +391,6 @@ export function Navigation({ currentPage, onNavigate, user, isAdmin }: Navigatio
           </div>
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -8,13 +8,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Checkbox } from './ui/checkbox';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from './ui/pagination';
+import { NewNavigation } from './NewNavigation';
+import { Footer } from './Footer';
 import { Search, Check, Trash2, MessageCircle, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
-type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users';
+type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
 
 interface AdminCommentModerationProps {
   onNavigate: (page: Page) => void;
+  user?: SupabaseUser | null;
+  isAdmin?: boolean;
 }
 
 interface Comment {
@@ -32,7 +37,7 @@ interface Comment {
   status: 'Pending' | 'Approved' | 'Flagged';
 }
 
-export function AdminCommentModeration({ onNavigate }: AdminCommentModerationProps) {
+export function AdminCommentModeration({ onNavigate, user, isAdmin }: AdminCommentModerationProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedComments, setSelectedComments] = useState<string[]>([]);
@@ -156,6 +161,13 @@ export function AdminCommentModeration({ onNavigate }: AdminCommentModerationPro
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <NewNavigation 
+        currentPage="admin-comments" 
+        onNavigate={onNavigate} 
+        user={user || null}
+        isAdmin={isAdmin}
+      />
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -365,6 +377,8 @@ export function AdminCommentModeration({ onNavigate }: AdminCommentModerationPro
           </CardContent>
         </Card>
       </div>
+      
+      <Footer onNavigate={onNavigate} />
     </div>
   );
 }
