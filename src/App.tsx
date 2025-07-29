@@ -277,32 +277,32 @@ export default function App() {
           <Auth onAuthSuccess={handleAuthSuccess} />
         );
       case 'auth':
-        return <Auth onAuthSuccess={handleAuthSuccess} />;
+        return <Auth onAuthSuccess={handleAuthSuccess} onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
       case 'admin-auth':
-        return <AdminAuth onAuthSuccess={handleAuthSuccess} />;
+        return <AdminAuth onAuthSuccess={handleAuthSuccess} onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
       case 'admin-dashboard':
         return isAdmin ? (
           <AdminDashboard onNavigate={navigateToPage} />
         ) : (
-          <AdminAuth onAuthSuccess={handleAuthSuccess} />
+          <AdminAuth onAuthSuccess={handleAuthSuccess} onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />
         );
       case 'admin-add-guide':
         return isAdmin ? (
-          <AdminAddGuide onNavigate={navigateToPage} />
+          <AdminAddGuide onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />
         ) : (
-          <AdminAuth onAuthSuccess={handleAuthSuccess} />
+          <AdminAuth onAuthSuccess={handleAuthSuccess} onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />
         );
       case 'admin-comments':
         return isAdmin ? (
-          <AdminCommentModeration onNavigate={navigateToPage} />
+          <AdminCommentModeration onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />
         ) : (
-          <AdminAuth onAuthSuccess={handleAuthSuccess} />
+          <AdminAuth onAuthSuccess={handleAuthSuccess} onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />
         );
       case 'admin-users':
         return isAdmin ? (
-          <AdminUsers onNavigate={navigateToPage} />
+          <AdminUsers onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />
         ) : (
-          <AdminAuth onAuthSuccess={handleAuthSuccess} />
+          <AdminAuth onAuthSuccess={handleAuthSuccess} onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />
         );
       case 'blogs':
         return <BlogsPage onNavigate={navigateToPage} onBlogSelect={handleBlogSelect} user={user} isAdmin={isAdmin} />;

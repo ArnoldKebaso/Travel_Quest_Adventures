@@ -4,7 +4,7 @@ import { Input } from './ui/input';
 import { Facebook, Twitter, Instagram, Youtube, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 
-type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact';
+type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
 
 interface FooterProps {
   onNavigate: (page: Page) => void;

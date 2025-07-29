@@ -6,15 +6,23 @@ import { Label } from './ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Alert, AlertDescription } from './ui/alert';
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle } from 'lucide-react';
+import { NewNavigation } from './NewNavigation';
+import { Footer } from './Footer';
 import { supabase } from '../utils/supabase/client';
 import { toast } from 'sonner';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
+
+type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
 
 interface AuthProps {
   onAuthSuccess?: () => void;
+  onNavigate?: (page: Page) => void;
+  user?: SupabaseUser | null;
+  isAdmin?: boolean;
   isAdminAuth?: boolean;
 }
 
-export function Auth({ onAuthSuccess, isAdminAuth = false }: AuthProps) {
+export function Auth({ onAuthSuccess, onNavigate, user, isAdmin, isAdminAuth = false }: AuthProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -162,17 +170,27 @@ export function Auth({ onAuthSuccess, isAdminAuth = false }: AuthProps) {
   };
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4 bg-gradient-to-br from-orange-50 to-orange-100">
-      {/* Hero Background */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
-        style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&h=1080&fit=crop')"
-        }}
-      />
+    <div className="min-h-screen bg-gray-50">
+      {onNavigate && (
+        <NewNavigation 
+          currentPage={isAdminAuth ? "admin-auth" : "auth"} 
+          onNavigate={onNavigate} 
+          user={user || null}
+          isAdmin={isAdmin}
+        />
+      )}
+      
+      <div className="min-h-screen relative flex items-center justify-center p-4 bg-gradient-to-br from-orange-50 to-orange-100">
+        {/* Hero Background */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&h=1080&fit=crop')"
+          }}
+        />
 
-      {/* Auth Card */}
-      <Card className="relative z-10 w-full max-w-md bg-white/95 backdrop-blur-sm shadow-2xl border-0">
+        {/* Auth Card */}
+        <Card className="relative z-10 w-full max-w-md bg-white/95 backdrop-blur-sm shadow-2xl border-0">
         <CardHeader className="text-center pb-6 pt-8 px-8">
           <div className="w-16 h-16 bg-orange-500 rounded-xl flex items-center justify-center mx-auto mb-6 shadow-lg">
             <span className="text-white font-bold text-xl">TQ</span>
@@ -382,6 +400,9 @@ export function Auth({ onAuthSuccess, isAdminAuth = false }: AuthProps) {
           )}
         </CardContent>
       </Card>
+      </div>
+
+      {onNavigate && <Footer onNavigate={onNavigate} />}
     </div>
   );
 }
