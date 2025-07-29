@@ -364,101 +364,101 @@ export function ToursPage({ onNavigate, onTourSelect, user, isAdmin }: ToursPage
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {currentTours.map((tour, index) => (
-                <Card 
-                  key={tour.id} 
+              <Card 
+                key={tour.id} 
                   className="group overflow-hidden cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-xl focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
-                  tabIndex={0}
-                  role="article"
-                  aria-label={`Tour: ${tour.title}`}
-                  style={{ animationDelay: `${index * 0.1}s` }}
+                tabIndex={0}
+                role="article"
+                aria-label={`Tour: ${tour.title}`}
+                style={{ animationDelay: `${index * 0.1}s` }}
                   onClick={() => onTourSelect(tour.id)}
-                >
-                  {/* Tour Image */}
-                  <div className="aspect-[4/3] overflow-hidden relative">
-                    <img
-                      src={tour.image}
-                      alt={`${tour.title} tour image`}
+              >
+                {/* Tour Image */}
+                <div className="aspect-[4/3] overflow-hidden relative">
+                  <img
+                    src={tour.image}
+                    alt={`${tour.title} tour image`}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    
-                    {/* Dark Gradient Overlay on Hover */}
+                  />
+                  
+                  {/* Dark Gradient Overlay on Hover */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    
-                    {/* Category Badge */}
-                    <div className="absolute top-4 left-4">
-                      <Badge 
-                        variant={tour.category === 'Adventure' ? 'default' : 'secondary'}
-                        className="text-white border-white/20"
-                      >
-                        {tour.category}
-                      </Badge>
-                    </div>
+                  
+                  {/* Category Badge */}
+                  <div className="absolute top-4 left-4">
+                    <Badge 
+                      variant={tour.category === 'Adventure' ? 'default' : 'secondary'}
+                      className="text-white border-white/20"
+                    >
+                      {tour.category}
+                    </Badge>
+                  </div>
 
-                    {/* View Tour Button (appears on hover) */}
+                  {/* View Tour Button (appears on hover) */}
                     <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
-                      <Button 
-                        className="w-full bg-white text-gray-900 hover:bg-gray-100"
-                        aria-label={`View details for ${tour.title}`}
+                    <Button 
+                      className="w-full bg-white text-gray-900 hover:bg-gray-100"
+                      aria-label={`View details for ${tour.title}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           onTourSelect(tour.id);
                         }}
-                      >
-                        View Tour
-                      </Button>
+                    >
+                      View Tour
+                    </Button>
+                  </div>
+                </div>
+
+                <CardContent className="p-6">
+                  {/* Title */}
+                    <h3 className="font-bold text-lg text-gray-900 mb-3 line-clamp-2 group-hover:text-primary transition-colors duration-500">
+                    {tour.title}
+                  </h3>
+
+                  {/* Rating and Duration */}
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-semibold text-sm">{tour.rating}</span>
+                      <span className="text-gray-500 text-sm">({tour.reviewCount})</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-gray-600">
+                      <Clock className="w-4 h-4" />
+                      <span className="text-sm">{tour.duration}</span>
                     </div>
                   </div>
 
-                  <CardContent className="p-6">
-                    {/* Title */}
-                    <h3 className="font-bold text-lg text-gray-900 mb-3 line-clamp-2 group-hover:text-primary transition-colors duration-500">
-                      {tour.title}
-                    </h3>
+                  {/* Description */}
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                    {tour.description}
+                  </p>
 
-                    {/* Rating and Duration */}
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-semibold text-sm">{tour.rating}</span>
-                        <span className="text-gray-500 text-sm">({tour.reviewCount})</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-gray-600">
-                        <Clock className="w-4 h-4" />
-                        <span className="text-sm">{tour.duration}</span>
+                  {/* Price and CTA */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm text-gray-600">From</span>
+                      <div className="text-2xl font-bold text-primary">
+                        ${tour.price}
                       </div>
                     </div>
-
-                    {/* Description */}
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                      {tour.description}
-                    </p>
-
-                    {/* Price and CTA */}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-sm text-gray-600">From</span>
-                        <div className="text-2xl font-bold text-primary">
-                          ${tour.price}
-                        </div>
-                      </div>
-                      <Button 
-                        variant="outline"
+                    <Button 
+                      variant="outline"
                         className="group-hover:bg-primary group-hover:text-white transition-colors duration-500"
-                        aria-label={`Book ${tour.title} tour`}
+                      aria-label={`Book ${tour.title} tour`}
                         onClick={(e) => {
                           e.stopPropagation();
                           onTourSelect(tour.id);
                         }}
-                      >
-                        View Tour
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    >
+                      View Tour
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
@@ -503,7 +503,7 @@ export function ToursPage({ onNavigate, onTourSelect, user, isAdmin }: ToursPage
                     <ChevronRight className="w-4 h-4" />
                   </Button>
                 </div>
-              </div>
+          </div>
             )}
           </>
         )}
