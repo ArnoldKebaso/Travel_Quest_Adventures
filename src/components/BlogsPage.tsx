@@ -316,93 +316,93 @@ export function BlogsPage({ onNavigate, onBlogSelect, user, isAdmin }: BlogsPage
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {currentPosts.map((post, index) => (
-                <Card 
-                  key={post.id} 
+              <Card 
+                key={post.id} 
                   className="group overflow-hidden cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-lg focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
-                  tabIndex={0}
-                  role="article"
-                  aria-label={`Blog post: ${post.title}`}
-                  style={{ animationDelay: `${index * 0.1}s` }}
+                tabIndex={0}
+                role="article"
+                aria-label={`Blog post: ${post.title}`}
+                style={{ animationDelay: `${index * 0.1}s` }}
                   onClick={() => onBlogSelect(post.id)}
-                >
-                  {/* Featured Image */}
-                  <div className="aspect-video overflow-hidden relative">
-                    <img
-                      src={post.image}
-                      alt={`Featured image for ${post.title}`}
+              >
+                {/* Featured Image */}
+                <div className="aspect-video overflow-hidden relative">
+                  <img
+                    src={post.image}
+                    alt={`Featured image for ${post.title}`}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
+                  />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    
-                    {/* Title Overlay on Hover */}
+                  
+                  {/* Title Overlay on Hover */}
                     <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                      <h3 className="text-white font-semibold text-sm line-clamp-2">
-                        {post.title}
-                      </h3>
-                    </div>
-                  </div>
-
-                  <CardContent className="p-4">
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {post.tags.slice(0, 2).map(tag => (
-                        <Badge key={tag} variant="secondary" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-
-                    {/* Title (visible when not hovering) */}
-                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:opacity-0 transition-opacity duration-500">
+                    <h3 className="text-white font-semibold text-sm line-clamp-2">
                       {post.title}
                     </h3>
+                  </div>
+                </div>
 
-                    {/* Excerpt */}
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                      {post.excerpt}
-                    </p>
+                <CardContent className="p-4">
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {post.tags.slice(0, 2).map(tag => (
+                      <Badge key={tag} variant="secondary" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
 
-                    {/* Author & Meta */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-8 h-8">
-                          <AvatarImage src="" alt={post.author.name} />
-                          <AvatarFallback className="text-xs">
-                            {post.author.avatar}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {post.author.name}
-                          </p>
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <Calendar className="w-3 h-3" />
-                            <span>{post.date}</span>
-                            <span>•</span>
-                            <span>{post.readTime} min read</span>
-                          </div>
+                  {/* Title (visible when not hovering) */}
+                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:opacity-0 transition-opacity duration-500">
+                    {post.title}
+                  </h3>
+
+                  {/* Excerpt */}
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                    {post.excerpt}
+                  </p>
+
+                  {/* Author & Meta */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src="" alt={post.author.name} />
+                        <AvatarFallback className="text-xs">
+                          {post.author.avatar}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {post.author.name}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <Calendar className="w-3 h-3" />
+                          <span>{post.date}</span>
+                          <span>•</span>
+                          <span>{post.readTime} min read</span>
                         </div>
                       </div>
+                    </div>
 
-                      <Button 
-                        size="sm" 
-                        variant="ghost"
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
                         className="opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                        aria-label={`Read more about ${post.title}`}
+                      aria-label={`Read more about ${post.title}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           onBlogSelect(post.id);
                         }}
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
@@ -432,8 +432,8 @@ export function BlogsPage({ onNavigate, onBlogSelect, user, isAdmin }: BlogsPage
                       >
                         {pageNum}
                       </Button>
-                    ))}
-                  </div>
+            ))}
+          </div>
 
                   {/* Next button */}
                   <Button

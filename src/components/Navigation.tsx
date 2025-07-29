@@ -82,7 +82,7 @@ export function Navigation({ currentPage, onNavigate, user, isAdmin }: Navigatio
   const renderNavItems = (items: typeof navItems, isMobile = false) => {
     if (isMobile) {
       return items.map((item) => (
-        <button
+            <button
           key={item.page}
           onClick={() => {
             onNavigate(item.page);
@@ -95,7 +95,7 @@ export function Navigation({ currentPage, onNavigate, user, isAdmin }: Navigatio
           }`}
         >
           {item.label}
-        </button>
+            </button>
       ));
     }
 
@@ -104,20 +104,20 @@ export function Navigation({ currentPage, onNavigate, user, isAdmin }: Navigatio
     const overflowItems = items.slice(4);
 
     return (
-      <>
+              <>
         {visibleItems.map((item) => (
-          <button
-            key={item.page}
-            onClick={() => onNavigate(item.page)}
+                  <button
+                    key={item.page}
+                    onClick={() => onNavigate(item.page)}
             className={`px-4 py-2 text-sm font-medium cursor-pointer transition-all duration-200 whitespace-nowrap rounded-md hover:bg-gray-50 ${
-              currentPage === item.page 
+                      currentPage === item.page 
                 ? 'text-orange-500 bg-orange-50' 
-                : 'text-gray-700 hover:text-orange-500'
-            }`}
-          >
-            {item.label}
-          </button>
-        ))}
+                        : 'text-gray-700 hover:text-orange-500'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
         
         {overflowItems.length > 0 && (
           <Popover>
@@ -144,7 +144,7 @@ export function Navigation({ currentPage, onNavigate, user, isAdmin }: Navigatio
               </div>
             </PopoverContent>
           </Popover>
-        )}
+            )}
       </>
     );
   };
