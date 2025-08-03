@@ -36,10 +36,22 @@ export function NewNavigation({ currentPage, onNavigate, user, isAdmin }: NewNav
 
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      onNavigate('home');
-      toast.success('Signed out successfully');
+      // Check if this is an admin user (simple auth)
+      const isAdminAuthenticated = localStorage.getItem('isAdminAuthenticated') === 'true';
+      
+      if (isAdminAuthenticated) {
+        // Clear admin authentication
+        localStorage.removeItem('isAdminAuthenticated');
+        localStorage.removeItem('adminUser');
+        onNavigate('home');
+        toast.success('Admin signed out successfully');
+      } else {
+        // Regular Supabase sign out
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        onNavigate('home');
+        toast.success('Signed out successfully');
+      }
     } catch (error) {
       console.error('Error signing out:', error);
       toast.error('Failed to sign out');

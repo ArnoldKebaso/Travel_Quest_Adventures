@@ -112,6 +112,13 @@ export default function App() {
   }, [updateURL]);
 
   const checkAdminStatus = (currentUser: User | null) => {
+    // First check if admin is authenticated via localStorage (simple admin login)
+    const isAdminAuthenticated = localStorage.getItem('isAdminAuthenticated') === 'true';
+    if (isAdminAuthenticated) {
+      return true;
+    }
+
+    // Fallback to Supabase user check for regular users
     if (!currentUser) return false;
     
     // Check if user is admin through multiple methods
@@ -135,7 +142,27 @@ export default function App() {
 
     window.addEventListener('popstate', handlePopState);
 
-    // Check for existing session
+
+    // Check for admin authentication first
+    const isAdminAuthenticated = localStorage.getItem('isAdminAuthenticated') === 'true';
+    if (isAdminAuthenticated) {
+      const adminUserData = localStorage.getItem('adminUser');
+      if (adminUserData) {
+        try {
+          const adminUser = JSON.parse(adminUserData);
+          setUser(adminUser);
+          setIsAdmin(true);
+          setIsLoading(false);
+          return;
+        } catch (error) {
+          console.error('Error parsing admin user data:', error);
+          localStorage.removeItem('isAdminAuthenticated');
+          localStorage.removeItem('adminUser');
+        }
+      }
+    }
+
+    // Check for existing Supabase session
     supabase.auth.getSession().then(({ data: { session } }) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
@@ -167,6 +194,10 @@ export default function App() {
 
       // Handle sign out
       if (event === 'SIGNED_OUT') {
+        // Clear admin authentication
+        localStorage.removeItem('isAdminAuthenticated');
+        localStorage.removeItem('adminUser');
+        setIsAdmin(false);
         navigateToPage('home');
       }
     });
@@ -191,6 +222,10 @@ export default function App() {
       }
 
       if (authEvent === 'SIGNED_OUT') {
+        // Clear admin authentication
+        localStorage.removeItem('isAdminAuthenticated');
+        localStorage.removeItem('adminUser');
+        setIsAdmin(false);
         navigateToPage('home');
       }
     };
@@ -358,3 +393,4 @@ export default function App() {
     </ThemeProvider>
   );
 }
+
