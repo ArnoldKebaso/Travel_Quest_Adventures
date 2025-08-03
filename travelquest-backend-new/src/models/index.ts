@@ -26,6 +26,7 @@ export interface Tour {
   id: string;
   title: string;
   description: string;
+  destinationId: string;
   category: 'Culture' | 'Adventure';
   region: string;
   duration: string;
@@ -42,6 +43,10 @@ export interface Tour {
   availableDates?: string[];
   maxGroupSize?: number;
   difficulty?: 'Easy' | 'Moderate' | 'Challenging';
+  includes?: string[];
+  itinerary?: string[];
+  images?: string[];
+  isAvailable?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -51,11 +56,9 @@ export interface BlogPost {
   title: string;
   excerpt: string;
   content: string;
-  author: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
+  category?: string;
+  author: string;
+  authorId?: string;
   publishedAt: string;
   updatedAt: string;
   region: string;
@@ -64,6 +67,38 @@ export interface BlogPost {
   readTime: number;
   status: 'draft' | 'published' | 'archived';
   featured?: boolean;
+  isPublished?: boolean;
+  isFeatured?: boolean;
+  viewCount?: number;
+  featuredImage?: string;
+  metadata?: {
+    seoTitle?: string;
+    seoDescription?: string;
+    keywords?: string[];
+  };
+  createdAt: string;
+}
+
+export interface Comment {
+  id: string;
+  content: string;
+  resourceType: string;
+  resourceId: string;
+  parentId?: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar?: string;
+  isApproved: boolean;
+  isSpam: boolean;
+  likes: number;
+  dislikes: number;
+  metadata: {
+    userAgent: string;
+    ipAddress: string;
+    flagReason?: string | undefined;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AdminUser {
