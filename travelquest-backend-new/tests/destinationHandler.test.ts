@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent } from 'aws-lambda';
+import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { getAllDestinations, getDestinationById, createDestination, updateDestination, deleteDestination } from '../src/handlers/destinationHandler';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
@@ -25,6 +25,22 @@ const createMockEvent = (overrides: any = {}): APIGatewayProxyEvent => ({
   resource: '/test',
   ...overrides,
 } as unknown as APIGatewayProxyEvent);
+
+// Test utility function to create mock Lambda context
+const createMockContext = (): Context => ({
+  callbackWaitsForEmptyEventLoop: false,
+  functionName: 'test-function',
+  functionVersion: '1',
+  invokedFunctionArn: 'arn:aws:lambda:us-east-1:123456789012:function:test-function',
+  memoryLimitInMB: '128',
+  awsRequestId: 'test-request-id',
+  logGroupName: '/aws/lambda/test-function',
+  logStreamName: '2021/01/01/[$LATEST]test-stream',
+  getRemainingTimeInMillis: () => 30000,
+  done: () => {},
+  fail: () => {},
+  succeed: () => {}
+});
 
 describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', () => {
   beforeEach(() => {
@@ -62,7 +78,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         queryStringParameters: null
       } as APIGatewayProxyEvent;
 
-      const result = await getAllDestinations(event);
+      const result = await getAllDestinations(, createMockContext());
 
       expect(result.statusCode).toBe(200);
       const body = JSON.parse(result.body);
@@ -78,7 +94,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         queryStringParameters: null
       } as APIGatewayProxyEvent;
 
-      const result = await getAllDestinations(event);
+      const result = await getAllDestinations(, createMockContext());
 
       expect(result.statusCode).toBe(500);
       const body = JSON.parse(result.body);
@@ -103,11 +119,11 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         Item: mockDestination
       });
 
-      const event = {
+      const event = createMockEvent({
         pathParameters: { id: '1' }
-      } as APIGatewayProxyEvent;
+      });
 
-      const result = await getDestinationById(event);
+      const result = await getDestinationById(, createMockContext());
 
       expect(result.statusCode).toBe(200);
       const body = JSON.parse(result.body);
@@ -121,11 +137,11 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         Item: undefined
       });
 
-      const event = {
+      const event = createMockEvent({
         pathParameters: { id: 'nonexistent' }
-      } as APIGatewayProxyEvent;
+      });
 
-      const result = await getDestinationById(event);
+      const result = await getDestinationById(, createMockContext());
 
       expect(result.statusCode).toBe(404);
       const body = JSON.parse(result.body);
@@ -134,11 +150,11 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
     });
 
     it('should return 400 when ID is missing', async () => {
-      const event = {
+      const event = createMockEvent({
         pathParameters: null
-      } as APIGatewayProxyEvent;
+      });
 
-      const result = await getDestinationById(event);
+      const result = await getDestinationById(, createMockContext());
 
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
@@ -165,7 +181,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         body: JSON.stringify(newDestination)
       } as APIGatewayProxyEvent;
 
-      const result = await createDestination(event);
+      const result = await createDestination(, createMockContext()));
 
       expect(result.statusCode).toBe(201);
       const body = JSON.parse(result.body);
@@ -185,7 +201,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         body: JSON.stringify(incompleteDestination)
       } as APIGatewayProxyEvent;
 
-      const result = await createDestination(event);
+      const result = await createDestination(, createMockContext()));
 
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
@@ -198,7 +214,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         body: null
       } as APIGatewayProxyEvent;
 
-      const result = await createDestination(event);
+      const result = await createDestination(, createMockContext()));
 
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
@@ -230,12 +246,12 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         Attributes: { ...existingDestination, ...updateData, updatedAt: new Date().toISOString() }
       });
 
-      const event = {
+      const event = createMockEvent({
         pathParameters: { id: '1' },
         body: JSON.stringify(updateData)
-      } as APIGatewayProxyEvent;
+      });
 
-      const result = await updateDestination(event);
+      const result = await updateDestination(, createMockContext());
 
       expect(result.statusCode).toBe(200);
       const body = JSON.parse(result.body);
@@ -249,12 +265,12 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         Item: undefined
       });
 
-      const event = {
+      const event = createMockEvent({
         pathParameters: { id: 'nonexistent' },
         body: JSON.stringify({ name: 'Updated Name' })
-      } as APIGatewayProxyEvent;
+      });
 
-      const result = await updateDestination(event);
+      const result = await updateDestination(, createMockContext());
 
       expect(result.statusCode).toBe(404);
       const body = JSON.parse(result.body);
@@ -276,11 +292,11 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
 
       ddbMock.on(require('@aws-sdk/lib-dynamodb').DeleteCommand).resolves({});
 
-      const event = {
+      const event = createMockEvent({
         pathParameters: { id: '1' }
-      } as APIGatewayProxyEvent;
+      });
 
-      const result = await deleteDestination(event);
+      const result = await deleteDestination(, createMockContext());
 
       expect(result.statusCode).toBe(200);
       const body = JSON.parse(result.body);
@@ -293,11 +309,11 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         Item: undefined
       });
 
-      const event = {
+      const event = createMockEvent({
         pathParameters: { id: 'nonexistent' }
-      } as APIGatewayProxyEvent;
+      });
 
-      const result = await deleteDestination(event);
+      const result = await deleteDestination(, createMockContext());
 
       expect(result.statusCode).toBe(404);
       const body = JSON.parse(result.body);
@@ -322,7 +338,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         body: JSON.stringify(maliciousInput)
       } as APIGatewayProxyEvent;
 
-      const result = await createDestination(event);
+      const result = await createDestination(, createMockContext()));
 
       expect(result.statusCode).toBe(201);
       const body = JSON.parse(result.body);
@@ -343,7 +359,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         body: JSON.stringify(invalidNumericData)
       } as APIGatewayProxyEvent;
 
-      const result = await createDestination(event);
+      const result = await createDestination(, createMockContext()));
 
       // Should handle invalid numeric input gracefully
       expect(result.statusCode).toBeLessThan(500);

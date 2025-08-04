@@ -7,14 +7,21 @@ Description: >
   role-based access control, advanced search, and comment moderation system.
   Designed to achieve 70+ marks with sophisticated AWS integration.
 
-# Global configuration for all Lambda functions
+# Global configuration for all Lambda functions and API
 Globals:
+  Api:
+    EndpointConfiguration: REGIONAL
+    BinaryMediaTypes: ["multipart/form-data", "image/*"]
   Function:
     Timeout: 30
     MemorySize: 512
     Runtime: nodejs18.x
     Architectures:
       - x86_64
+    Tracing: Active   # enable X-Ray
+    Tags:
+      Project: TravelQuest
+      Owner: StudentName
     Environment:
       Variables:
         NODE_ENV: production
@@ -120,9 +127,22 @@ Resources:
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
+        - AttributeName: region
+          AttributeType: S
+        - AttributeName: category
+          AttributeType: S
       KeySchema:
         - AttributeName: id
           KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: region-category-index
+          KeySchema:
+            - AttributeName: region
+              KeyType: HASH
+            - AttributeName: category
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   ToursTable:
     Type: AWS::DynamoDB::Table
@@ -132,9 +152,22 @@ Resources:
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
+        - AttributeName: region
+          AttributeType: S
+        - AttributeName: category
+          AttributeType: S
       KeySchema:
         - AttributeName: id
           KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: region-category-index
+          KeySchema:
+            - AttributeName: region
+              KeyType: HASH
+            - AttributeName: category
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   BlogsTable:
     Type: AWS::DynamoDB::Table
@@ -144,9 +177,22 @@ Resources:
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
+        - AttributeName: category
+          AttributeType: S
+        - AttributeName: publishedAt
+          AttributeType: S
       KeySchema:
         - AttributeName: id
           KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: category-publishedAt-index
+          KeySchema:
+            - AttributeName: category
+              KeyType: HASH
+            - AttributeName: publishedAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   CommentsTable:
     Type: AWS::DynamoDB::Table
@@ -608,241 +654,3 @@ Outputs:
   CommentsTableName:
     Description: "DynamoDB Comments Table Name"
     Value: !Ref CommentsTable
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub "${AWS::StackName}-tours"
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-
-  BlogsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub "${AWS::StackName}-blogs"
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-
-  AdminUsersTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub "${AWS::StackName}-admin-users"
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-
-  # Lambda Functions
-  DestinationsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/
-      Handler: handlers/destinations.handler
-      Events:
-        GetDestinations:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /destinations
-            Method: get
-        GetDestination:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /destinations/{id}
-            Method: get
-        CreateDestination:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /destinations
-            Method: post
-        UpdateDestination:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /destinations/{id}
-            Method: put
-        DeleteDestination:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /destinations/{id}
-            Method: delete
-      Environment:
-        Variables:
-          DESTINATIONS_TABLE: !Ref DestinationsTable
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref DestinationsTable
-
-  ToursFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/
-      Handler: handlers/tours.handler
-      Events:
-        GetTours:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /tours
-            Method: get
-        GetTour:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /tours/{id}
-            Method: get
-        CreateTour:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /tours
-            Method: post
-        UpdateTour:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /tours/{id}
-            Method: put
-        DeleteTour:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /tours/{id}
-            Method: delete
-      Environment:
-        Variables:
-          TOURS_TABLE: !Ref ToursTable
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ToursTable
-
-  BlogsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/
-      Handler: handlers/blogs.handler
-      Events:
-        GetBlogs:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /blogs
-            Method: get
-        GetBlog:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /blogs/{id}
-            Method: get
-        CreateBlog:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /blogs
-            Method: post
-        UpdateBlog:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /blogs/{id}
-            Method: put
-        DeleteBlog:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /blogs/{id}
-            Method: delete
-      Environment:
-        Variables:
-          BLOGS_TABLE: !Ref BlogsTable
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref BlogsTable
-
-  AdminFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: src/
-      Handler: handlers/admin.handler
-      Events:
-        AdminAuth:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /admin/auth
-            Method: post
-        GetAdminUsers:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /admin/users
-            Method: get
-        CreateAdminUser:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /admin/users
-            Method: post
-        UpdateAdminUser:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /admin/users/{id}
-            Method: put
-        DeleteAdminUser:
-          Type: Api
-          Properties:
-            RestApiId: !Ref TravelQuestApi
-            Path: /admin/users/{id}
-            Method: delete
-      Environment:
-        Variables:
-          ADMIN_USERS_TABLE: !Ref AdminUsersTable
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref AdminUsersTable
-
-Outputs:
-  TravelQuestApi:
-    Description: "API Gateway endpoint URL for TravelQuest API"
-    Value: !Sub "https://${TravelQuestApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
-    Export:
-      Name: !Sub "${AWS::StackName}-api-url"
-
-  DestinationsTable:
-    Description: "DynamoDB table for destinations"
-    Value: !Ref DestinationsTable
-    Export:
-      Name: !Sub "${AWS::StackName}-destinations-table"
-
-  ToursTable:
-    Description: "DynamoDB table for tours"
-    Value: !Ref ToursTable
-    Export:
-      Name: !Sub "${AWS::StackName}-tours-table"
-
-  BlogsTable:
-    Description: "DynamoDB table for blogs"
-    Value: !Ref BlogsTable
-    Export:
-      Name: !Sub "${AWS::StackName}-blogs-table"
-
-  AdminUsersTable:
-    Description: "DynamoDB table for admin users"
-    Value: !Ref AdminUsersTable
-    Export:
-      Name: !Sub "${AWS::StackName}-admin-users-table"

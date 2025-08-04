@@ -1,3 +1,5 @@
+//Jest configuration file for the TravelQuest backend
+// This file sets up the testing environment, specifies test roots, and configures coverage reporting
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
