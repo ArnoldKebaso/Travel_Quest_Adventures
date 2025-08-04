@@ -2,6 +2,8 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, ScanCommand, UpdateCommand, DeleteCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { createResponse } from '../utils/apiUtils';
+import { withCommon } from '../middleware/common';
+import { requireRole } from '../middleware/auth';
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
@@ -11,15 +13,15 @@ const docClient = DynamoDBDocumentClient.from(client);
  * Advanced analytics implementation for high marks
  * Demonstrates sophisticated data aggregation and business intelligence
  */
-export const getAnalytics = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  try {
-    // Ensure admin access
-    const userClaims = event.requestContext.authorizer?.claims;
-    const userGroups = userClaims?.['cognito:groups'] || '';
-    
-    if (!userGroups.includes('admin')) {
-      return createResponse(403, null, 'Admin access required');
-    }
+export const getAnalytics = withCommon(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    try {
+      // Ensure admin access using requireRole helper
+      const userClaims = event.requestContext.authorizer?.claims;
+      
+      if (!requireRole(userClaims, 'admin')) {
+        return createResponse(403, null, 'Admin access required');
+      }
 
     console.log('Generating analytics dashboard data');
 
@@ -80,20 +82,20 @@ export const getAnalytics = async (event: APIGatewayProxyEvent): Promise<APIGate
     console.error('Error generating analytics:', error);
     return createResponse(500, null, 'Failed to generate analytics');
   }
-};
+});
 
 /**
  * GET /admin/moderation - Get content requiring moderation
  * Advanced content moderation system for high marks
  */
-export const getModerationQueue = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  try {
-    const userClaims = event.requestContext.authorizer?.claims;
-    const userGroups = userClaims?.['cognito:groups'] || '';
-    
-    if (!userGroups.includes('admin') && !userGroups.includes('moderator')) {
-      return createResponse(403, null, 'Moderator access required');
-    }
+export const getModerationQueue = withCommon(
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    try {
+      const userClaims = event.requestContext.authorizer?.claims;
+      
+      if (!requireRole(userClaims, 'admin', 'moderator')) {
+        return createResponse(403, null, 'Moderator access required');
+      }
 
     console.log('Fetching moderation queue');
 
@@ -146,7 +148,7 @@ export const getModerationQueue = async (event: APIGatewayProxyEvent): Promise<A
     console.error('Error fetching moderation queue:', error);
     return createResponse(500, null, 'Failed to fetch moderation queue');
   }
-};
+});
 
 /**
  * POST /admin/moderation/{id}/approve - Approve content

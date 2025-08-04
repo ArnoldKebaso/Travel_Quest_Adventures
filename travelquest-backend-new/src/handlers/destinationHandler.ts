@@ -17,10 +17,13 @@ export const getAllDestinations = withCommon(
     try {
       console.log('Getting all destinations');
       
-      const queryParams = event.queryStringParameters || {};
-      const { region, category, price_min, price_max, nextToken, limit = '20' } = queryParams;
+      // Validate query parameters with Zod
+      const queryValidation = DestinationQuerySchema.safeParse(event.queryStringParameters || {});
+      if (!queryValidation.success) {
+        return createResponse(400, null, `Invalid query parameters: ${queryValidation.error.issues.map(i => i.message).join(', ')}`);
+      }
       
-      const maxLimit = Math.min(parseInt(limit), 100); // Cap at 100 items
+      const { region, category, price_min, price_max, nextToken, limit } = queryValidation.data;
       
       let result;
       
@@ -38,7 +41,7 @@ export const getAllDestinations = withCommon(
             ':region': region,
             ':category': category
           },
-          Limit: maxLimit,
+          Limit: limit,
           ExclusiveStartKey: nextToken ? JSON.parse(Buffer.from(nextToken, 'base64').toString()) : undefined
         });
         
@@ -55,7 +58,7 @@ export const getAllDestinations = withCommon(
           ExpressionAttributeValues: {
             ':region': region
           },
-          Limit: maxLimit,
+          Limit: limit,
           ExclusiveStartKey: nextToken ? JSON.parse(Buffer.from(nextToken, 'base64').toString()) : undefined
         });
         
@@ -64,7 +67,7 @@ export const getAllDestinations = withCommon(
         // Fallback to scan when no GSI filters are provided
         const scanCommand = new ScanCommand({
           TableName: tableName,
-          Limit: maxLimit,
+          Limit: limit,
           ExclusiveStartKey: nextToken ? JSON.parse(Buffer.from(nextToken, 'base64').toString()) : undefined
         });
         
@@ -74,11 +77,11 @@ export const getAllDestinations = withCommon(
       let destinations = result.Items as Destination[];
       
       // Apply additional filters that can't be done at the DynamoDB level
-      if (price_min || price_max) {
+      if (price_min !== undefined || price_max !== undefined) {
         destinations = destinations.filter(dest => {
           const price = dest.price || 0;
-          if (price_min && price < parseFloat(price_min)) return false;
-          if (price_max && price > parseFloat(price_max)) return false;
+          if (price_min !== undefined && price < price_min) return false;
+          if (price_max !== undefined && price > price_max) return false;
           return true;
         });
       }
@@ -142,15 +145,14 @@ export const createDestination = withCommon(
 
       const body = JSON.parse(event.body);
       
-      // Validate required fields
-      const requiredFields = ['name', 'description', 'region', 'country', 'price'];
-      const validation = validateRequired(body, requiredFields);
-      if (!validation.isValid) {
-        return createResponse(400, null, `Missing required fields: ${validation.missing.join(', ')}`);
+      // Validate with Zod schema
+      const validation = CreateDestinationSchema.safeParse(body);
+      if (!validation.success) {
+        return createResponse(400, null, `Validation failed: ${validation.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', ')}`);
       }
 
       // Sanitize input to prevent XSS attacks
-      const sanitizedInput = sanitizeDestinationInput(body);
+      const sanitizedInput = sanitizeDestinationInput(validation.data);
 
       const destination: Destination = {
         id: uuidv4(),
@@ -158,12 +160,12 @@ export const createDestination = withCommon(
         description: sanitizedInput.description,
         region: sanitizedInput.region,
         country: sanitizedInput.country,
-        price: parseFloat(sanitizedInput.price),
+        price: sanitizedInput.price,
         image: sanitizedInput.image || '',
-        category: sanitizedInput.category || 'adventure',
-        rating: sanitizedInput.rating || 0,
-        reviewCount: sanitizedInput.reviewCount || 0,
-        highlights: sanitizedInput.highlights || [],
+        category: sanitizedInput.category,
+        rating: sanitizedInput.rating,
+        reviewCount: sanitizedInput.reviewCount,
+        highlights: sanitizedInput.highlights,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };

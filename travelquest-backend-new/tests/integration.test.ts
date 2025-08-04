@@ -3,9 +3,26 @@
  * This demonstrates functional testing for academic evaluation
  */
 
+import { Context } from 'aws-lambda';
 import { getAllDestinations, createDestination } from '../src/handlers/destinationHandler';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { mockClient } from 'aws-sdk-client-mock';
+
+// Test utility function to create mock Lambda context
+const createMockContext = (): Context => ({
+  callbackWaitsForEmptyEventLoop: false,
+  functionName: 'test-function',
+  functionVersion: '1',
+  invokedFunctionArn: 'arn:aws:lambda:us-east-1:123456789012:function:test-function',
+  memoryLimitInMB: '128',
+  awsRequestId: 'test-request-id',
+  logGroupName: '/aws/lambda/test-function',
+  logStreamName: '2021/01/01/[$LATEST]test-stream',
+  getRemainingTimeInMillis: () => 30000,
+  done: () => {},
+  fail: () => {},
+  succeed: () => {}
+});
 
 // Mock the DynamoDB client
 const ddbMock = mockClient(DynamoDBDocumentClient);
@@ -40,7 +57,7 @@ describe('TravelQuest Backend - Integration Tests for Academic Excellence', () =
         queryStringParameters: null
       } as any;
 
-      const result = await getAllDestinations(mockEvent);
+      const result = await getAllDestinations(, createMockContext());
 
       expect(result.statusCode).toBe(200);
       const responseBody = JSON.parse(result.body);
@@ -56,7 +73,7 @@ describe('TravelQuest Backend - Integration Tests for Academic Excellence', () =
         queryStringParameters: null
       } as any;
 
-      const result = await getAllDestinations(mockEvent);
+      const result = await getAllDestinations(, createMockContext());
 
       expect(result.statusCode).toBe(500);
       const responseBody = JSON.parse(result.body);
@@ -74,7 +91,7 @@ describe('TravelQuest Backend - Integration Tests for Academic Excellence', () =
         body: JSON.stringify(incompleteData)
       } as any;
 
-      const result = await createDestination(mockEvent);
+      const result = await createDestination(, createMockContext());
 
       expect(result.statusCode).toBe(400);
       const responseBody = JSON.parse(result.body);
@@ -98,7 +115,7 @@ describe('TravelQuest Backend - Integration Tests for Academic Excellence', () =
         body: JSON.stringify(validDestination)
       } as any;
 
-      const result = await createDestination(mockEvent);
+      const result = await createDestination(, createMockContext());
 
       expect(result.statusCode).toBe(201);
       const responseBody = JSON.parse(result.body);
@@ -115,7 +132,7 @@ describe('TravelQuest Backend - Integration Tests for Academic Excellence', () =
         body: null
       } as any;
 
-      const result = await createDestination(mockEvent);
+      const result = await createDestination(, createMockContext());
 
       expect(result.statusCode).toBe(400);
       const responseBody = JSON.parse(result.body);
@@ -128,7 +145,7 @@ describe('TravelQuest Backend - Integration Tests for Academic Excellence', () =
         body: '{ invalid json'
       } as any;
 
-      const result = await createDestination(mockEvent);
+      const result = await createDestination(, createMockContext());
 
       expect(result.statusCode).toBe(500);
       const responseBody = JSON.parse(result.body);
@@ -153,7 +170,7 @@ describe('TravelQuest Backend - Integration Tests for Academic Excellence', () =
         body: JSON.stringify(destinationWithStringPrice)
       } as any;
 
-      const result = await createDestination(mockEvent);
+      const result = await createDestination(, createMockContext());
 
       expect(result.statusCode).toBe(201);
       const responseBody = JSON.parse(result.body);
