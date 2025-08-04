@@ -1,13 +1,8 @@
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { getAllDestinations, getDestinationById, createDestination, updateDestination, deleteDestination } from '../src/handlers/destinationHandler';
-import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
-import { mockClient } from 'aws-sdk-client-mock';
 
-// Mock the DynamoDB client
-const ddbMock = mockClient(DynamoDBDocumentClient);
-
-// Mock environment variables
-process.env.DESTINATIONS_TABLE = 'test-destinations-table';
+// Access global mock
+const mockSend = (global as any).mockDynamoDBSend;
 
 // Test utility function to create mock API Gateway events
 const createMockEvent = (overrides: any = {}): APIGatewayProxyEvent => ({
@@ -44,7 +39,7 @@ const createMockContext = (): Context => ({
 
 describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', () => {
   beforeEach(() => {
-    ddbMock.reset();
+    mockSend.mockReset();
   });
 
   describe('getAllDestinations', () => {
@@ -70,7 +65,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         }
       ];
 
-      ddbMock.on(require('@aws-sdk/lib-dynamodb').ScanCommand).resolves({
+      mockSend.mockResolvedValue({
         Items: mockDestinations
       });
 
@@ -83,18 +78,18 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
       expect(result.statusCode).toBe(200);
       const body = JSON.parse(result.body);
       expect(body.success).toBe(true);
-      expect(body.data).toHaveLength(2);
-      expect(body.data[0].name).toBe('Sydney');
+      expect(body.data.destinations).toHaveLength(2);
+      expect(body.data.destinations[0].name).toBe('Sydney');
     });
 
     it('should handle database errors gracefully', async () => {
-      ddbMock.on(require('@aws-sdk/lib-dynamodb').ScanCommand).rejects(new Error('Database error'));
+      mockSend.mockRejectedValue(new Error('Database error'));
 
       const event = {
         queryStringParameters: null
       } as APIGatewayProxyEvent;
 
-      const result = await getAllDestinations(, createMockContext());
+      const result = await getAllDestinations(event, createMockContext());
 
       expect(result.statusCode).toBe(500);
       const body = JSON.parse(result.body);
@@ -115,7 +110,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         reviewCount: 150
       };
 
-      ddbMock.on(require('@aws-sdk/lib-dynamodb').GetCommand).resolves({
+      mockSend.mockResolvedValue({
         Item: mockDestination
       });
 
@@ -123,7 +118,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         pathParameters: { id: '1' }
       });
 
-      const result = await getDestinationById(, createMockContext());
+      const result = await getDestinationById(event, createMockContext());
 
       expect(result.statusCode).toBe(200);
       const body = JSON.parse(result.body);
@@ -133,7 +128,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
     });
 
     it('should return 404 when destination not found', async () => {
-      ddbMock.on(require('@aws-sdk/lib-dynamodb').GetCommand).resolves({
+      mockSend.mockResolvedValue({
         Item: undefined
       });
 
@@ -141,7 +136,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         pathParameters: { id: 'nonexistent' }
       });
 
-      const result = await getDestinationById(, createMockContext());
+      const result = await getDestinationById(event, createMockContext());
 
       expect(result.statusCode).toBe(404);
       const body = JSON.parse(result.body);
@@ -154,7 +149,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         pathParameters: null
       });
 
-      const result = await getDestinationById(, createMockContext());
+      const result = await getDestinationById(event, createMockContext());
 
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
@@ -175,13 +170,13 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         category: 'city'
       };
 
-      ddbMock.on(require('@aws-sdk/lib-dynamodb').PutCommand).resolves({});
+      mockSend.mockResolvedValue({});
 
       const event = {
         body: JSON.stringify(newDestination)
       } as APIGatewayProxyEvent;
 
-      const result = await createDestination(, createMockContext()));
+      const result = await createDestination(event, createMockContext());
 
       expect(result.statusCode).toBe(201);
       const body = JSON.parse(result.body);
@@ -201,12 +196,12 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         body: JSON.stringify(incompleteDestination)
       } as APIGatewayProxyEvent;
 
-      const result = await createDestination(, createMockContext()));
+      const result = await createDestination(event, createMockContext());
 
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
       expect(body.success).toBe(false);
-      expect(body.message).toContain('Missing required fields');
+      expect(body.message).toContain('Validation failed');
     });
 
     it('should return 400 when body is missing', async () => {
@@ -214,7 +209,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         body: null
       } as APIGatewayProxyEvent;
 
-      const result = await createDestination(, createMockContext()));
+      const result = await createDestination(event, createMockContext());
 
       expect(result.statusCode).toBe(400);
       const body = JSON.parse(result.body);
@@ -238,11 +233,11 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         price: 2700
       };
 
-      ddbMock.on(require('@aws-sdk/lib-dynamodb').GetCommand).resolves({
+      mockSend.mockResolvedValueOnce({
         Item: existingDestination
       });
 
-      ddbMock.on(require('@aws-sdk/lib-dynamodb').UpdateCommand).resolves({
+      mockSend.mockResolvedValueOnce({
         Attributes: { ...existingDestination, ...updateData, updatedAt: new Date().toISOString() }
       });
 
@@ -251,7 +246,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         body: JSON.stringify(updateData)
       });
 
-      const result = await updateDestination(, createMockContext());
+      const result = await updateDestination(event, createMockContext());
 
       expect(result.statusCode).toBe(200);
       const body = JSON.parse(result.body);
@@ -261,7 +256,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
     });
 
     it('should return 404 when destination to update is not found', async () => {
-      ddbMock.on(require('@aws-sdk/lib-dynamodb').GetCommand).resolves({
+      mockSend.mockResolvedValue({
         Item: undefined
       });
 
@@ -270,7 +265,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         body: JSON.stringify({ name: 'Updated Name' })
       });
 
-      const result = await updateDestination(, createMockContext());
+      const result = await updateDestination(event, createMockContext());
 
       expect(result.statusCode).toBe(404);
       const body = JSON.parse(result.body);
@@ -286,17 +281,17 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         name: 'Sydney'
       };
 
-      ddbMock.on(require('@aws-sdk/lib-dynamodb').GetCommand).resolves({
+      mockSend.mockResolvedValueOnce({
         Item: existingDestination
       });
 
-      ddbMock.on(require('@aws-sdk/lib-dynamodb').DeleteCommand).resolves({});
+      mockSend.mockResolvedValueOnce({});
 
       const event = createMockEvent({
         pathParameters: { id: '1' }
       });
 
-      const result = await deleteDestination(, createMockContext());
+      const result = await deleteDestination(event, createMockContext());
 
       expect(result.statusCode).toBe(200);
       const body = JSON.parse(result.body);
@@ -305,7 +300,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
     });
 
     it('should return 404 when destination to delete is not found', async () => {
-      ddbMock.on(require('@aws-sdk/lib-dynamodb').GetCommand).resolves({
+      mockSend.mockResolvedValue({
         Item: undefined
       });
 
@@ -313,7 +308,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         pathParameters: { id: 'nonexistent' }
       });
 
-      const result = await deleteDestination(, createMockContext());
+      const result = await deleteDestination(event, createMockContext());
 
       expect(result.statusCode).toBe(404);
       const body = JSON.parse(result.body);
@@ -332,13 +327,13 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         price: 2500
       };
 
-      ddbMock.on(require('@aws-sdk/lib-dynamodb').PutCommand).resolves({});
+      mockSend.mockResolvedValue({});
 
       const event = {
         body: JSON.stringify(maliciousInput)
       } as APIGatewayProxyEvent;
 
-      const result = await createDestination(, createMockContext()));
+      const result = await createDestination(event, createMockContext());
 
       expect(result.statusCode).toBe(201);
       const body = JSON.parse(result.body);
@@ -359,7 +354,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         body: JSON.stringify(invalidNumericData)
       } as APIGatewayProxyEvent;
 
-      const result = await createDestination(, createMockContext()));
+      const result = await createDestination(event, createMockContext());
 
       // Should handle invalid numeric input gracefully
       expect(result.statusCode).toBeLessThan(500);
