@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, GetCommand, PutCommand, ScanCommand, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, PutCommand, ScanCommand, QueryCommand, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { Destination } from '../models';
 import { createResponse, validateRequired } from '../utils/apiUtils';
 import { sanitizeDestinationInput, validateAndSanitizeInput } from '../utils/sanitization';
@@ -12,18 +12,88 @@ const docClient = DynamoDBDocumentClient.from(client);
 const tableName = process.env['DESTINATIONS_TABLE']!;
 
 export const getAllDestinations = withCommon(
-  async (_event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
       console.log('Getting all destinations');
       
-      const command = new ScanCommand({
-        TableName: tableName,
-      });
+      const queryParams = event.queryStringParameters || {};
+      const { region, category, price_min, price_max, nextToken, limit = '20' } = queryParams;
+      
+      const maxLimit = Math.min(parseInt(limit), 100); // Cap at 100 items
+      
+      let result;
+      
+      // If region and category are provided, use GSI for efficient querying
+      if (region && category) {
+        const queryCommand = new QueryCommand({
+          TableName: tableName,
+          IndexName: 'region-category-index',
+          KeyConditionExpression: '#region = :region AND #category = :category',
+          ExpressionAttributeNames: {
+            '#region': 'region',
+            '#category': 'category'
+          },
+          ExpressionAttributeValues: {
+            ':region': region,
+            ':category': category
+          },
+          Limit: maxLimit,
+          ExclusiveStartKey: nextToken ? JSON.parse(Buffer.from(nextToken, 'base64').toString()) : undefined
+        });
+        
+        result = await docClient.send(queryCommand);
+      } else if (region) {
+        // Query by region only
+        const queryCommand = new QueryCommand({
+          TableName: tableName,
+          IndexName: 'region-category-index',
+          KeyConditionExpression: '#region = :region',
+          ExpressionAttributeNames: {
+            '#region': 'region'
+          },
+          ExpressionAttributeValues: {
+            ':region': region
+          },
+          Limit: maxLimit,
+          ExclusiveStartKey: nextToken ? JSON.parse(Buffer.from(nextToken, 'base64').toString()) : undefined
+        });
+        
+        result = await docClient.send(queryCommand);
+      } else {
+        // Fallback to scan when no GSI filters are provided
+        const scanCommand = new ScanCommand({
+          TableName: tableName,
+          Limit: maxLimit,
+          ExclusiveStartKey: nextToken ? JSON.parse(Buffer.from(nextToken, 'base64').toString()) : undefined
+        });
+        
+        result = await docClient.send(scanCommand);
+      }
+      
+      let destinations = result.Items as Destination[];
+      
+      // Apply additional filters that can't be done at the DynamoDB level
+      if (price_min || price_max) {
+        destinations = destinations.filter(dest => {
+          const price = dest.price || 0;
+          if (price_min && price < parseFloat(price_min)) return false;
+          if (price_max && price > parseFloat(price_max)) return false;
+          return true;
+        });
+      }
+      
+      // Prepare response with pagination
+      const response: any = {
+        destinations: destinations || [],
+        count: destinations?.length || 0
+      };
+      
+      // Add nextToken if there are more results
+      if (result.LastEvaluatedKey) {
+        response.nextToken = Buffer.from(JSON.stringify(result.LastEvaluatedKey)).toString('base64');
+      }
 
-      const result = await docClient.send(command);
-      const destinations = result.Items as Destination[];
-
-      return createResponse<Destination[]>(200, destinations || [], 'Destinations retrieved successfully');
+      return createResponse(200, response, 'Destinations retrieved successfully');
     } catch (error) {
       console.error('Error getting destinations:', error);
       return createResponse(500, null, 'Failed to retrieve destinations');

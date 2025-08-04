@@ -127,9 +127,22 @@ Resources:
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
+        - AttributeName: region
+          AttributeType: S
+        - AttributeName: category
+          AttributeType: S
       KeySchema:
         - AttributeName: id
           KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: region-category-index
+          KeySchema:
+            - AttributeName: region
+              KeyType: HASH
+            - AttributeName: category
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   ToursTable:
     Type: AWS::DynamoDB::Table
@@ -139,9 +152,22 @@ Resources:
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
+        - AttributeName: region
+          AttributeType: S
+        - AttributeName: category
+          AttributeType: S
       KeySchema:
         - AttributeName: id
           KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: region-category-index
+          KeySchema:
+            - AttributeName: region
+              KeyType: HASH
+            - AttributeName: category
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   BlogsTable:
     Type: AWS::DynamoDB::Table
@@ -151,9 +177,22 @@ Resources:
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
+        - AttributeName: category
+          AttributeType: S
+        - AttributeName: publishedAt
+          AttributeType: S
       KeySchema:
         - AttributeName: id
           KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: category-publishedAt-index
+          KeySchema:
+            - AttributeName: category
+              KeyType: HASH
+            - AttributeName: publishedAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   CommentsTable:
     Type: AWS::DynamoDB::Table

@@ -6,6 +6,22 @@ import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 import jwt from "jsonwebtoken";
 import { unauth } from "../utils/responses";
 
+/**
+ * Role-based access control helper
+ * Checks if user has any of the expected roles
+ */
+export const requireRole = (claims: any, ...expectedRoles: string[]): boolean => {
+  if (!claims) {
+    return false;
+  }
+  
+  // Handle both comma-separated string and array formats
+  const groups = claims['cognito:groups'] || [];
+  const userRoles = Array.isArray(groups) ? groups : groups.split(',').map((g: string) => g.trim());
+  
+  return expectedRoles.some(role => userRoles.includes(role));
+};
+
 // Wrap handler with JSON parser, CORS, error handler, & (optional) Cognito JWT verify
 export const withMiddlewares = (handler: APIGatewayProxyHandlerV2, requireAuth = false): any => {
   return middy(handler)
