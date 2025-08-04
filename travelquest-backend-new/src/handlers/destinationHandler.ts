@@ -2,9 +2,10 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, PutCommand, ScanCommand, QueryCommand, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { Destination } from '../models';
-import { createResponse, validateRequired } from '../utils/apiUtils';
-import { sanitizeDestinationInput, validateAndSanitizeInput } from '../utils/sanitization';
+import { createResponse } from '../utils/apiUtils';
+import { sanitizeDestinationInput } from '../utils/sanitization';
 import { withCommon } from '../middleware/common';
+import { CreateDestinationSchema, UpdateDestinationSchema, DestinationQuerySchema } from '../validation';
 import { v4 as uuidv4 } from 'uuid';
 
 const client = new DynamoDBClient({});
