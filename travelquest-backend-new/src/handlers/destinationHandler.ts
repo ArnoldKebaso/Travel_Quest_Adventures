@@ -3,6 +3,7 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, PutCommand, ScanCommand, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { Destination } from '../models';
 import { createResponse, validateRequired } from '../utils/apiUtils';
+import { sanitizeDestinationInput, validateAndSanitizeInput } from '../utils/sanitization';
 import { v4 as uuidv4 } from 'uuid';
 
 const client = new DynamoDBClient({});
@@ -71,18 +72,21 @@ export const createDestination = async (event: APIGatewayProxyEvent): Promise<AP
       return createResponse(400, null, `Missing required fields: ${validation.missing.join(', ')}`);
     }
 
+    // Sanitize input to prevent XSS attacks
+    const sanitizedInput = sanitizeDestinationInput(body);
+
     const destination: Destination = {
       id: uuidv4(),
-      name: body.name,
-      description: body.description,
-      region: body.region,
-      country: body.country,
-      price: parseFloat(body.price),
-      image: body.image || '',
-      category: body.category || 'adventure',
-      rating: body.rating || 0,
-      reviewCount: body.reviewCount || 0,
-      highlights: body.highlights || [],
+      name: sanitizedInput.name,
+      description: sanitizedInput.description,
+      region: sanitizedInput.region,
+      country: sanitizedInput.country,
+      price: parseFloat(sanitizedInput.price),
+      image: sanitizedInput.image || '',
+      category: sanitizedInput.category || 'adventure',
+      rating: sanitizedInput.rating || 0,
+      reviewCount: sanitizedInput.reviewCount || 0,
+      highlights: sanitizedInput.highlights || [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

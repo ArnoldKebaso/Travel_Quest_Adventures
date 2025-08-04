@@ -103,9 +103,9 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         Item: mockDestination
       });
 
-      const event = {
+      const event = createMockEvent({
         pathParameters: { id: '1' }
-      } as APIGatewayProxyEvent;
+      });
 
       const result = await getDestinationById(event);
 
@@ -121,9 +121,9 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         Item: undefined
       });
 
-      const event = {
+      const event = createMockEvent({
         pathParameters: { id: 'nonexistent' }
-      } as APIGatewayProxyEvent;
+      });
 
       const result = await getDestinationById(event);
 
@@ -134,9 +134,9 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
     });
 
     it('should return 400 when ID is missing', async () => {
-      const event = {
+      const event = createMockEvent({
         pathParameters: null
-      } as APIGatewayProxyEvent;
+      });
 
       const result = await getDestinationById(event);
 
@@ -230,10 +230,10 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         Attributes: { ...existingDestination, ...updateData, updatedAt: new Date().toISOString() }
       });
 
-      const event = {
+      const event = createMockEvent({
         pathParameters: { id: '1' },
         body: JSON.stringify(updateData)
-      } as APIGatewayProxyEvent;
+      });
 
       const result = await updateDestination(event);
 
@@ -249,10 +249,10 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         Item: undefined
       });
 
-      const event = {
+      const event = createMockEvent({
         pathParameters: { id: 'nonexistent' },
         body: JSON.stringify({ name: 'Updated Name' })
-      } as APIGatewayProxyEvent;
+      });
 
       const result = await updateDestination(event);
 
@@ -276,9 +276,9 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
 
       ddbMock.on(require('@aws-sdk/lib-dynamodb').DeleteCommand).resolves({});
 
-      const event = {
+      const event = createMockEvent({
         pathParameters: { id: '1' }
-      } as APIGatewayProxyEvent;
+      });
 
       const result = await deleteDestination(event);
 
@@ -293,9 +293,9 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         Item: undefined
       });
 
-      const event = {
+      const event = createMockEvent({
         pathParameters: { id: 'nonexistent' }
-      } as APIGatewayProxyEvent;
+      });
 
       const result = await deleteDestination(event);
 
