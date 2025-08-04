@@ -57,7 +57,7 @@ describe('TravelQuest Backend - Integration Tests for Academic Excellence', () =
         queryStringParameters: null
       } as any;
 
-      const result = await getAllDestinations(, createMockContext());
+      const result = await getAllDestinations(mockEvent, createMockContext());
 
       expect(result.statusCode).toBe(200);
       const responseBody = JSON.parse(result.body);
@@ -73,7 +73,7 @@ describe('TravelQuest Backend - Integration Tests for Academic Excellence', () =
         queryStringParameters: null
       } as any;
 
-      const result = await getAllDestinations(, createMockContext());
+      const result = await getAllDestinations(mockEvent, createMockContext());
 
       expect(result.statusCode).toBe(500);
       const responseBody = JSON.parse(result.body);
@@ -91,7 +91,7 @@ describe('TravelQuest Backend - Integration Tests for Academic Excellence', () =
         body: JSON.stringify(incompleteData)
       } as any;
 
-      const result = await createDestination(, createMockContext());
+      const result = await createDestination(mockEvent, createMockContext());
 
       expect(result.statusCode).toBe(400);
       const responseBody = JSON.parse(result.body);
@@ -115,7 +115,7 @@ describe('TravelQuest Backend - Integration Tests for Academic Excellence', () =
         body: JSON.stringify(validDestination)
       } as any;
 
-      const result = await createDestination(, createMockContext());
+      const result = await createDestination(mockEvent, createMockContext());
 
       expect(result.statusCode).toBe(201);
       const responseBody = JSON.parse(result.body);
@@ -132,7 +132,7 @@ describe('TravelQuest Backend - Integration Tests for Academic Excellence', () =
         body: null
       } as any;
 
-      const result = await createDestination(, createMockContext());
+      const result = await createDestination(mockEvent, createMockContext());
 
       expect(result.statusCode).toBe(400);
       const responseBody = JSON.parse(result.body);
@@ -145,7 +145,7 @@ describe('TravelQuest Backend - Integration Tests for Academic Excellence', () =
         body: '{ invalid json'
       } as any;
 
-      const result = await createDestination(, createMockContext());
+      const result = await createDestination(mockEvent, createMockContext());
 
       expect(result.statusCode).toBe(500);
       const responseBody = JSON.parse(result.body);
@@ -170,7 +170,7 @@ describe('TravelQuest Backend - Integration Tests for Academic Excellence', () =
         body: JSON.stringify(destinationWithStringPrice)
       } as any;
 
-      const result = await createDestination(, createMockContext());
+      const result = await createDestination(mockEvent, createMockContext());
 
       expect(result.statusCode).toBe(201);
       const responseBody = JSON.parse(result.body);

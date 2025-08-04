@@ -78,7 +78,7 @@ describe('Destination Handler Tests - Comprehensive Test Suite for High Marks', 
         queryStringParameters: null
       } as APIGatewayProxyEvent;
 
-      const result = await getAllDestinations(, createMockContext());
+      const result = await getAllDestinations(event, createMockContext());
 
       expect(result.statusCode).toBe(200);
       const body = JSON.parse(result.body);
