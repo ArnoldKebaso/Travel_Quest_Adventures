@@ -62,8 +62,7 @@ const createTestEvent = (overrides: any = {}): APIGatewayProxyEvent => ({
     requestTimeEpoch: 1428582896000,
     resourceId: 'test-resource',
     resourcePath: '/test',
-    protocol: 'HTTP/1.1',
-    httpMethod: 'GET'
+    protocol: 'HTTP/1.1'
   },
   resource: '/test',
   ...overrides
