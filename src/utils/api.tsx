@@ -1,14 +1,12 @@
-import { projectId, publicAnonKey } from './supabase/info';
-
-const API_BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-838db481`;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/dev';
 
 // Helper function to make API requests
 async function apiRequest(endpoint: string, options: RequestInit = {}) {
-  const token = localStorage.getItem('supabase_auth_token');
-  
+  const token = localStorage.getItem('id_token');
+
   const headers = {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token || publicAnonKey}`,
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...options.headers,
   };
 
@@ -63,6 +61,13 @@ export const destinations = {
       body: JSON.stringify({ comment, rating }),
     });
     return data.comment;
+  },
+
+  async book(destinationId: string, details: { checkIn: string; checkOut: string; guests: string }) {
+    return apiRequest(`/destinations/${destinationId}/book`, {
+      method: 'POST',
+      body: JSON.stringify(details),
+    });
   },
 };
 

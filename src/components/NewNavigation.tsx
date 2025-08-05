@@ -12,17 +12,16 @@ import {
 } from './ui/dropdown-menu';
 import { User, Menu, LogOut, Heart, Shield } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
-import { supabase } from '../utils/supabase/client';
+import { authService, User } from '../utils/auth';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
 
 interface NewNavigationProps {
   currentPage: Page;
   onNavigate: (page: Page) => void;
-  user: SupabaseUser | null;
+  user: User | null;
   isAdmin?: boolean;
 }
 
@@ -46,9 +45,8 @@ export function NewNavigation({ currentPage, onNavigate, user, isAdmin }: NewNav
         onNavigate('home');
         toast.success('Admin signed out successfully');
       } else {
-        // Regular Supabase sign out
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
+        const { success, error } = await authService.signOut();
+        if (!success) throw new Error(error);
         onNavigate('home');
         toast.success('Signed out successfully');
       }

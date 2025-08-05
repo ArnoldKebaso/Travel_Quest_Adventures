@@ -14,16 +14,14 @@ import { NewNavigation } from './NewNavigation';
 import { Footer } from './Footer';
 import { SavedDestinations } from './SavedDestinations';
 import { User, Mail, Lock, MapPin, Heart, Calendar, Star, Settings, LogOut, Loader2, Edit2, Trash2, Check, X } from 'lucide-react';
-import { supabase } from '../utils/supabase/client';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+import type { User } from '../utils/auth';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact';
 
 interface UserAccountProps {
-  user: SupabaseUser | null;
+  user: User | null;
   onNavigate: (page: Page) => void;
   isAdmin?: boolean;
 }

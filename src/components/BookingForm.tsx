@@ -5,8 +5,7 @@ import { Label } from './ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Calendar, Users, CheckCircle, Loader2 } from 'lucide-react';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { supabase } from '../utils/supabase/client';
+import { destinations } from '../utils/api';
 import { toast } from 'sonner';
 
 interface BookingFormProps {
@@ -81,31 +80,11 @@ export function BookingForm({ destinationId, destinationName, price, onBookingSu
 
     try {
       setIsLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast.error('Please sign in to book a trip');
-        return;
-      }
-
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/destinations/${destinationId}/book`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          checkIn: formData.checkIn,
-          checkOut: formData.checkOut,
-          guests: formData.guests
-        })
+      await destinations.book(destinationId, {
+        checkIn: formData.checkIn,
+        checkOut: formData.checkOut,
+        guests: formData.guests,
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to book trip');
-      }
 
       setBookingSuccess(true);
       toast.success('Trip booked successfully!');

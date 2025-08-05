@@ -1,9 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-import { projectId, publicAnonKey } from './supabase/info';
-
-const supabaseUrl = `https://${projectId}.supabase.co`;
-
-export const supabase = createClient(supabaseUrl, publicAnonKey);
+import { Auth, Hub } from 'aws-amplify';
 
 export interface User {
   id: string;
@@ -27,74 +22,46 @@ class AuthService {
 
   constructor() {
     this.initialize();
+    Hub.listen('auth', () => {
+      this.refreshUser();
+    });
   }
 
   private async initialize() {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.access_token) {
-        localStorage.setItem('supabase_auth_token', session.access_token);
-        this.setState({
-          user: {
-            id: session.user.id,
-            email: session.user.email!,
-            name: session.user.user_metadata?.name || session.user.email!,
-          },
-          loading: false,
-          error: null,
-        });
-      } else {
-        localStorage.removeItem('supabase_auth_token');
-        this.setState({
-          user: null,
-          loading: false,
-          error: null,
-        });
-      }
-    } catch (error) {
-      console.error('Auth initialization error:', error);
-      this.setState({
-        user: null,
-        loading: false,
-        error: 'Failed to initialize authentication',
-      });
-    }
+    await this.refreshUser();
+    this.setState({ loading: false });
+  }
 
-    // Listen for auth changes
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.access_token) {
-        localStorage.setItem('supabase_auth_token', session.access_token);
-        this.setState({
-          user: {
-            id: session.user.id,
-            email: session.user.email!,
-            name: session.user.user_metadata?.name || session.user.email!,
-          },
-          loading: false,
-          error: null,
-        });
-      } else {
-        localStorage.removeItem('supabase_auth_token');
-        this.setState({
-          user: null,
-          loading: false,
-          error: null,
-        });
-      }
-    });
+  private async refreshUser() {
+    try {
+      const cognitoUser = await Auth.currentAuthenticatedUser();
+      const session = await Auth.currentSession();
+      const idToken = session.getIdToken().getJwtToken();
+      localStorage.setItem('id_token', idToken);
+      this.setState({
+        user: {
+          id: cognitoUser.attributes.sub,
+          email: cognitoUser.attributes.email,
+          name: cognitoUser.attributes.name || cognitoUser.attributes.email,
+        },
+        error: null,
+      });
+    } catch {
+      localStorage.removeItem('id_token');
+      this.setState({ user: null, error: null });
+    }
   }
 
   private setState(newState: Partial<AuthState>) {
     this.state = { ...this.state, ...newState };
-    this.listeners.forEach(listener => listener(this.state));
+    this.listeners.forEach((listener) => listener(this.state));
   }
 
   subscribe(listener: (state: AuthState) => void) {
     this.listeners.push(listener);
-    listener(this.state); // Call immediately with current state
-    
+    listener(this.state);
     return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
+      this.listeners = this.listeners.filter((l) => l !== listener);
     };
   }
 
@@ -103,69 +70,38 @@ class AuthService {
   }
 
   async signIn(email: string, password: string) {
+    this.setState({ loading: true, error: null });
     try {
-      this.setState({ loading: true, error: null });
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        this.setState({ loading: false, error: error.message });
-        return { success: false, error: error.message };
-      }
-
-      return { success: true, user: data.user };
-    } catch (error) {
-      const errorMessage = 'Failed to sign in';
-      this.setState({ loading: false, error: errorMessage });
-      return { success: false, error: errorMessage };
+      await Auth.signIn(email, password);
+      await this.refreshUser();
+      this.setState({ loading: false });
+      return { success: true };
+    } catch (error: any) {
+      this.setState({ loading: false, error: error.message });
+      return { success: false, error: error.message };
     }
   }
 
   async signUp(email: string, password: string, name: string) {
+    this.setState({ loading: true, error: null });
     try {
-      this.setState({ loading: true, error: null });
-      
-      // Use our custom signup endpoint
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/auth/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${publicAnonKey}`,
-        },
-        body: JSON.stringify({ email, password, name }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        this.setState({ loading: false, error: result.error || 'Failed to create account' });
-        return { success: false, error: result.error || 'Failed to create account' };
-      }
-
-      // Now sign in with the created user
-      return await this.signIn(email, password);
-    } catch (error) {
-      const errorMessage = 'Failed to create account';
-      this.setState({ loading: false, error: errorMessage });
-      return { success: false, error: errorMessage };
+      await Auth.signUp({ username: email, password, attributes: { email, name } });
+      this.setState({ loading: false });
+      return { success: true };
+    } catch (error: any) {
+      this.setState({ loading: false, error: error.message });
+      return { success: false, error: error.message };
     }
   }
 
   async signOut() {
     try {
-      await supabase.auth.signOut();
-      localStorage.removeItem('supabase_auth_token');
-      this.setState({
-        user: null,
-        loading: false,
-        error: null,
-      });
+      await Auth.signOut();
+      localStorage.removeItem('id_token');
+      this.setState({ user: null });
       return { success: true };
-    } catch (error) {
-      return { success: false, error: 'Failed to sign out' };
+    } catch (error: any) {
+      return { success: false, error: error.message };
     }
   }
 }

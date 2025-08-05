@@ -4,7 +4,7 @@ import { Card, CardContent } from './ui/card';
 import { NewNavigation } from './NewNavigation';
 import { Footer } from './Footer';
 import { Compass, Heart, Leaf, Users, Award, Globe } from 'lucide-react';
-import type { User } from '@supabase/supabase-js';
+import type { User } from '../utils/auth';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact';
 

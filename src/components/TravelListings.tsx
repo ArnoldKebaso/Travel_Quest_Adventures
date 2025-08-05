@@ -6,7 +6,7 @@ import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Search, MapPin, Star, Clock, Loader2 } from 'lucide-react';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { destinations } from '../utils/api';
 
 interface TravelListingsProps {
   onDestinationSelect: (destinationId: string) => void;
@@ -44,23 +44,8 @@ export function TravelListings({ onDestinationSelect }: TravelListingsProps) {
   const fetchDestinations = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/destinations`, {
-        headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      setDestinations(data.destinations || []);
+      const data = await destinations.getAll();
+      setDestinations(data);
     } catch (err) {
       console.error('Error fetching destinations:', err);
       setError('Failed to load destinations. Please try again.');
