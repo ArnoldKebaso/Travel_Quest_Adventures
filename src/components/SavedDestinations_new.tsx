@@ -7,11 +7,9 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import { NewNavigation } from './NewNavigation';
 import { Footer } from './Footer';
 import { Star, Clock, Loader2, Heart, Trash2, HeartOff, Suitcase } from 'lucide-react';
-import { projectId } from '../utils/supabase/info';
-import { supabase } from '../utils/supabase/client';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import type { User } from '@supabase/supabase-js';
+import type { User } from '../utils/auth';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact';
 

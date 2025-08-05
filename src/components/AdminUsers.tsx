@@ -12,13 +12,13 @@ import { NewNavigation } from './NewNavigation';
 import { Footer } from './Footer';
 import { Search, UserPlus, Trash2, UserX, Shield, User } from 'lucide-react';
 import { toast } from 'sonner';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+import type { User } from '../utils/auth';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
 
 interface AdminUsersProps {
   onNavigate: (page: Page) => void;
-  user?: SupabaseUser | null;
+  user?: User | null;
   isAdmin?: boolean;
 }
 

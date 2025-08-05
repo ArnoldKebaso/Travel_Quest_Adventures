@@ -23,8 +23,7 @@ import { NewNavigation } from './components/NewNavigation';
 import { NotFound } from './components/NotFound';
 import { ThemeProvider } from './components/ThemeProvider';
 import { Toaster } from './components/ui/sonner';
-import { supabase } from './utils/supabase/client';
-import type { User } from '@supabase/supabase-js';
+import { authService, User } from './utils/auth';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
 
@@ -162,84 +161,17 @@ export default function App() {
       }
     }
 
-    // Check for existing Supabase session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      
-      const adminStatus = checkAdminStatus(currentUser);
-      setIsAdmin(adminStatus);
-      
+    const unsubscribe = authService.subscribe(({ user }) => {
+      setUser(user);
+      setIsAdmin(checkAdminStatus(user));
       setIsLoading(false);
     });
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      
-      const adminStatus = checkAdminStatus(currentUser);
-      setIsAdmin(adminStatus);
-
-      // Handle post-login redirection
-      if (event === 'SIGNED_IN' && currentUser) {
-        if (adminStatus) {
-          // Redirect admin users to admin dashboard
-          navigateToPage('admin-dashboard');
-        } else {
-          // Redirect regular users to account page
-          navigateToPage('account');
-        }
-      }
-
-      // Handle sign out
-      if (event === 'SIGNED_OUT') {
-        // Clear admin authentication
-        localStorage.removeItem('isAdminAuthenticated');
-        localStorage.removeItem('adminUser');
-        setIsAdmin(false);
-        navigateToPage('home');
-      }
-    });
-
-    // Listen for mock auth changes (for demo mode)
-    const handleMockAuthChange = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const { event: authEvent, session } = customEvent.detail;
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      
-      const adminStatus = checkAdminStatus(currentUser);
-      setIsAdmin(adminStatus);
-
-      // Handle post-login redirection
-      if (authEvent === 'SIGNED_IN' && currentUser) {
-        if (adminStatus) {
-          navigateToPage('admin-dashboard');
-        } else {
-          navigateToPage('account');
-        }
-      }
-
-      if (authEvent === 'SIGNED_OUT') {
-        // Clear admin authentication
-        localStorage.removeItem('isAdminAuthenticated');
-        localStorage.removeItem('adminUser');
-        setIsAdmin(false);
-        navigateToPage('home');
-      }
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('supabase-auth-change', handleMockAuthChange);
-    }
+    window.addEventListener('popstate', handlePopState);
 
     return () => {
-      subscription?.unsubscribe();
+      unsubscribe();
       window.removeEventListener('popstate', handlePopState);
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('supabase-auth-change', handleMockAuthChange);
-      }
     };
   }, [getPageFromURL, navigateToPage]);
 

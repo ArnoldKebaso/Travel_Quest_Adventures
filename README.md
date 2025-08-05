@@ -15,7 +15,7 @@ TravelQuest Adventures is a modern, responsive travel booking and exploration pl
 - **📝 Travel Blogs**: Rich content management with reading and commenting
 - **💾 Saved Destinations**: Personal wishlist functionality
 - **👤 User Account**: Profile management and booking history
-- **🔐 Authentication**: Secure login/signup with Supabase Auth
+- **🔐 Authentication**: Secure login/signup with AWS Cognito
 
 ### 🛡️ **Admin Features**
 - **📊 Admin Dashboard**: Comprehensive analytics and management interface
@@ -48,7 +48,7 @@ TravelQuest Adventures is a modern, responsive travel booking and exploration pl
 
 ### **State & Data Management**
 - **React Hooks** - Modern state management
-- **Supabase** - Backend-as-a-Service integration
+- **AWS Amplify & DynamoDB** - Serverless backend integration
 - **Local Storage** - Client-side data persistence
 
 ### **Development Tools**
@@ -74,7 +74,6 @@ src/
 │   ├── AdminDashboard.tsx
 │   └── ...
 ├── utils/               # Utility functions
-│   ├── supabase/        # Supabase configuration
 │   ├── api.tsx          # API utilities
 │   └── auth.tsx         # Authentication utilities
 ├── lib/                 # Library configurations
@@ -118,9 +117,8 @@ src/
 
 4. **Configure Environment Variables**
    ```env
-   # Supabase Configuration
-   VITE_SUPABASE_URL=your_supabase_project_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   # AWS Configuration
+   VITE_API_BASE_URL=your_api_gateway_url
    
    # API Configuration (Backend)
    VITE_API_BASE_URL=https://your-api-gateway-url.amazonaws.com/Prod
@@ -157,11 +155,10 @@ pnpm lint
 
 ## 🔧 Configuration
 
-### **Supabase Setup**
-1. Create a new Supabase project at [supabase.com](https://supabase.com)
-2. Configure authentication providers
-3. Set up database tables (see backend documentation)
-4. Update environment variables
+### **AWS Setup**
+1. Configure an AWS Cognito user pool and any identity providers.
+2. Deploy backend APIs (SAM/Amplify) and DynamoDB tables.
+3. Update environment variables with your API base URL and Cognito details.
 
 ### **Theme Configuration**
 The application supports light/dark themes with custom color schemes:
@@ -233,15 +230,11 @@ const fetchDestinations = async () => {
 
 ### **Authentication Flow**
 ```typescript
-// Supabase Auth Integration
-import { supabase } from './utils/supabase/client';
+// AWS Amplify Auth Integration
+import { Auth } from 'aws-amplify';
 
 const signIn = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
-  return { data, error };
+  await Auth.signIn(email, password);
 };
 ```
 
@@ -407,12 +400,8 @@ npm install
 # Restart dev server after changes
 ```
 
-#### **Supabase Connection Issues**
-```typescript
-// Check Supabase configuration
-console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
-console.log('Supabase Key:', import.meta.env.VITE_SUPABASE_ANON_KEY);
-```
+#### **AWS Connection Issues**
+Ensure your `VITE_API_BASE_URL` matches the deployed API Gateway and that Cognito credentials are valid.
 
 ## 📞 Support & Contact
 
@@ -430,7 +419,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Radix UI** - For accessible component primitives
 - **Tailwind CSS** - For the utility-first CSS framework
 - **Vite** - For the lightning-fast build tool
-- **Supabase** - For the backend-as-a-service platform
+- **AWS Amplify** - For the serverless tooling
 
 ---
 

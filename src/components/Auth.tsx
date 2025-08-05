@@ -8,16 +8,17 @@ import { Alert, AlertDescription } from './ui/alert';
 import { Eye, EyeOff, Mail, Lock, User, AlertCircle } from 'lucide-react';
 import { NewNavigation } from './NewNavigation';
 import { Footer } from './Footer';
-import { supabase } from '../utils/supabase/client';
+import { authService } from '../utils/auth';
+import { Auth as AmplifyAuth } from 'aws-amplify';
 import { toast } from 'sonner';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+import type { User } from '../utils/auth';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
 
 interface AuthProps {
   onAuthSuccess?: () => void;
   onNavigate?: (page: Page) => void;
-  user?: SupabaseUser | null;
+  user?: User | null;
   isAdmin?: boolean;
   isAdminAuth?: boolean;
 }
@@ -73,20 +74,15 @@ export function Auth({ onAuthSuccess, onNavigate, user, isAdmin, isAdminAuth = f
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (error) {
-        if (error.message.includes('Invalid login credentials')) {
+      const { success, error } = await authService.signIn(formData.email, formData.password);
+      if (!success) {
+        if (error?.includes('NotAuthorizedException')) {
           toast.error('Invalid email or password');
         } else {
-          toast.error(error.message);
+          toast.error(error || 'Failed to sign in');
         }
         return;
       }
-
       toast.success('Signed in successfully!');
       onAuthSuccess?.();
     } catch (error) {
@@ -102,28 +98,19 @@ export function Auth({ onAuthSuccess, onNavigate, user, isAdmin, isAdminAuth = f
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-            role: isAdminAuth ? 'admin' : 'user',
-          },
-        },
-      });
+      const { success, error } = await authService.signUp(
+        formData.email,
+        formData.password,
+        formData.fullName
+      );
 
-      if (error) {
-        toast.error(error.message);
+      if (!success) {
+        toast.error(error || 'Failed to create account');
         return;
       }
 
-      if (data.user && !data.session) {
-        toast.success('Please check your email to confirm your account');
-      } else {
-        toast.success('Account created successfully!');
-        onAuthSuccess?.();
-      }
+      toast.success('Account created successfully!');
+      onAuthSuccess?.();
     } catch (error) {
       console.error('Sign up error:', error);
       toast.error('An unexpected error occurred');
@@ -135,28 +122,9 @@ export function Auth({ onAuthSuccess, onNavigate, user, isAdmin, isAdminAuth = f
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        },
-      });
-
-      if (error) {
-        // If Google OAuth is not configured, show a helpful message
-        if (error.message.includes('provider is not enabled')) {
-          toast.error('Google sign-in is not configured. Please use email/password instead.');
-        } else {
-          toast.error(error.message);
-        }
-      }
-    } catch (error) {
-      console.error('Google sign in error:', error);
-      toast.error('Google sign-in failed. Please try email/password instead.');
+      await AmplifyAuth.federatedSignIn({ provider: 'Google' });
+    } catch (error: any) {
+      toast.error(error.message);
     } finally {
       setIsLoading(false);
     }

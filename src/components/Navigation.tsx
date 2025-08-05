@@ -16,16 +16,15 @@ import {
   PopoverTrigger,
 } from './ui/popover';
 import { User, Menu, LogOut, Heart, Shield, MoreHorizontal, Moon, Sun } from 'lucide-react';
-import { supabase } from '../utils/supabase/client';
+import { authService, User } from '../utils/auth';
 import { toast } from 'sonner';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact';
 
 interface NavigationProps {
   currentPage: Page;
   onNavigate: (page: Page) => void;
-  user: SupabaseUser | null;
+  user: User | null;
   isAdmin?: boolean;
 }
 
@@ -44,8 +43,8 @@ export function Navigation({ currentPage, onNavigate, user, isAdmin }: Navigatio
 
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      const { success, error } = await authService.signOut();
+      if (!success) throw new Error(error);
       onNavigate('home');
       toast.success('Signed out successfully');
     } catch (error) {

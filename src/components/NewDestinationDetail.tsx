@@ -24,7 +24,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { User } from '@supabase/supabase-js';
+import type { User } from '../utils/auth';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found';
 
