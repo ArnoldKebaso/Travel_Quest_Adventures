@@ -7,15 +7,13 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { BookingForm } from './BookingForm';
 import { ArrowLeft, Star, MapPin, Clock, Heart, Share2, Calendar, Users, Send, Loader2, AlertCircle } from 'lucide-react';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { supabase } from '../utils/supabase/client';
+import { get, post, fetchAPI } from '../utils/api';
 import { toast } from 'sonner';
-import type { User } from '@supabase/supabase-js';
 
 interface DestinationDetailProps {
   destinationId: string | null;
   onBack: () => void;
-  user: User | null;
+  user: any;
 }
 
 interface Destination {

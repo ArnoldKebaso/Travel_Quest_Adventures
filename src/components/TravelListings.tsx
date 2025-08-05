@@ -6,7 +6,7 @@ import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Search, MapPin, Star, Clock, Loader2 } from 'lucide-react';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { get, fetchAPI } from '../utils/api';
 
 interface TravelListingsProps {
   onDestinationSelect: (destinationId: string) => void;
@@ -44,23 +44,15 @@ export function TravelListings({ onDestinationSelect }: TravelListingsProps) {
   const fetchDestinations = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/destinations`, {
-        headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Try Amplify API first, fallback to direct fetch
+      try {
+        const data = await get('/destinations', { region: selectedRegion !== 'All' ? selectedRegion : undefined, category: selectedCategory !== 'All' ? selectedCategory : undefined });
+        setDestinations(data.destinations || data || []);
+      } catch (amplifyError) {
+        console.warn('Amplify API failed, using fallback:', amplifyError);
+        const data = await fetchAPI('/destinations');
+        setDestinations(data.destinations || data || []);
       }
-
-      const data = await response.json();
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      setDestinations(data.destinations || []);
     } catch (err) {
       console.error('Error fetching destinations:', err);
       setError('Failed to load destinations. Please try again.');
