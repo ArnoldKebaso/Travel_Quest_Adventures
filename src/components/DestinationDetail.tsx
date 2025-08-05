@@ -75,23 +75,15 @@ export function DestinationDetail({ destinationId, onBack, user }: DestinationDe
 
     try {
       setIsLoading(true);
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/destinations/${destinationId}`, {
-        headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Try Amplify API first, fallback to direct fetch
+      try {
+        const data = await get(`/destinations/${destinationId}`);
+        setDestination(data.destination || data);
+      } catch (amplifyError) {
+        console.warn('Amplify API failed, using fallback:', amplifyError);
+        const data = await fetchAPI(`/destinations/${destinationId}`);
+        setDestination(data.destination || data);
       }
-
-      const data = await response.json();
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      setDestination(data.destination);
     } catch (err) {
       console.error('Error fetching destination:', err);
       setError('Failed to load destination details. Please try again.');
@@ -105,25 +97,15 @@ export function DestinationDetail({ destinationId, onBack, user }: DestinationDe
 
     try {
       setIsLoadingComments(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/destinations/${destinationId}/comments`, {
-        headers: {
-          'Authorization': session?.access_token ? `Bearer ${session.access_token}` : `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Try Amplify API first, fallback to direct fetch
+      try {
+        const data = await get(`/destinations/${destinationId}/comments`);
+        setComments(data.comments || data || []);
+      } catch (amplifyError) {
+        console.warn('Amplify API failed, using fallback:', amplifyError);
+        const data = await fetchAPI(`/destinations/${destinationId}/comments`);
+        setComments(data.comments || data || []);
       }
-
-      const data = await response.json();
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      setComments(data.comments || []);
     } catch (err) {
       console.error('Error fetching comments:', err);
     } finally {
@@ -164,35 +146,30 @@ export function DestinationDetail({ destinationId, onBack, user }: DestinationDe
     try {
       setIsSubmittingComment(true);
       
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error('Authentication required');
+      // Submit comment using API
+      const commentData = {
+        comment: newComment,
+        rating: newRating
+      };
+
+      try {
+        const data = await post(`/destinations/${destinationId}/comments`, commentData);
+        // Add the new comment to the list
+        setComments([data.comment || data, ...comments]);
+        setNewComment('');
+        setNewRating(5);
+        toast.success('Review posted successfully!');
+      } catch (amplifyError) {
+        console.warn('Amplify API failed, using fallback:', amplifyError);
+        const data = await fetchAPI(`/destinations/${destinationId}/comments`, {
+          method: 'POST',
+          body: JSON.stringify(commentData)
+        });
+        setComments([data.comment || data, ...comments]);
+        setNewComment('');
+        setNewRating(5);
+        toast.success('Review posted successfully!');
       }
-
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/destinations/${destinationId}/comments`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          comment: newComment,
-          rating: newRating
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to submit comment');
-      }
-
-      const data = await response.json();
-      
-      // Add the new comment to the list
-      setComments([data.comment, ...comments]);
-      setNewComment('');
-      setNewRating(5);
-      toast.success('Review posted successfully!');
     } catch (err) {
       console.error('Error submitting comment:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to submit comment. Please try again.');
