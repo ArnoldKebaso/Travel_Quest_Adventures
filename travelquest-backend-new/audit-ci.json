@@ -1,0 +1,9 @@
+{
+  "allowlist": [],
+  "report-type": "json",
+  "output-format": "text",
+  "show-found": true,
+  "show-not-found": false,
+  "summary": true,
+  "skip-dev": false
+}
