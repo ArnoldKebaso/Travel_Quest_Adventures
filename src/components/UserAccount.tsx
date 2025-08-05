@@ -13,12 +13,11 @@ import { SavedDestinations } from './SavedDestinations';
 import { Edit2, Trash2, Check, X, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact';
 
 interface UserAccountProps {
-  user: SupabaseUser | null;
+  user: any;
   onNavigate: (page: Page) => void;
   isAdmin?: boolean;
 }
