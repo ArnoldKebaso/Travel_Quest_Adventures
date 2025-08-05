@@ -1,4 +1,6 @@
-import { Auth, Hub } from 'aws-amplify';
+
+import Auth from '@aws-amplify/auth';
+import { Hub } from '@aws-amplify/core';
 
 export interface User {
   id: string;

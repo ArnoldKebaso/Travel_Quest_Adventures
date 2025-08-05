@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from './ui/dropdown-menu';
-import { User, Menu, LogOut, Heart, Shield } from 'lucide-react';
+import { Menu, LogOut, Heart, Shield } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { authService, User } from '../utils/auth';
 import { toast } from 'sonner';

@@ -9,9 +9,8 @@ import { Eye, EyeOff, Mail, Lock, User, AlertCircle } from 'lucide-react';
 import { NewNavigation } from './NewNavigation';
 import { Footer } from './Footer';
 import { authService } from '../utils/auth';
-import { Auth as AmplifyAuth } from 'aws-amplify';
+import { Auth } from 'aws-amplify/auth';
 import { toast } from 'sonner';
-import type { User } from '../utils/auth';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
 
@@ -122,7 +121,7 @@ export function Auth({ onAuthSuccess, onNavigate, user, isAdmin, isAdminAuth = f
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      await AmplifyAuth.federatedSignIn({ provider: 'Google' });
+      await Auth.federatedSignIn({ provider: 'Google' });
     } catch (error: any) {
       toast.error(error.message);
     } finally {
