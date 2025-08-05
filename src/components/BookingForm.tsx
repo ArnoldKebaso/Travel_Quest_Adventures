@@ -5,7 +5,7 @@ import { Label } from './ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Calendar, Users, CheckCircle, Loader2 } from 'lucide-react';
-import { post, fetchAPI } from '../utils/api';
+import { post } from '../utils/api';
 import { toast } from 'sonner';
 
 interface BookingFormProps {
@@ -87,19 +87,9 @@ export function BookingForm({ destinationId, destinationName, price, onBookingSu
         guests: formData.guests
       };
 
-      try {
-        await post(`/destinations/${destinationId}/book`, bookingData);
-        setBookingSuccess(true);
-        toast.success('Trip booked successfully!');
-      } catch (amplifyError) {
-        console.warn('Amplify API failed, using fallback:', amplifyError);
-        await fetchAPI(`/destinations/${destinationId}/book`, {
-          method: 'POST',
-          body: JSON.stringify(bookingData)
-        });
-        setBookingSuccess(true);
-        toast.success('Trip booked successfully!');
-      }
+      await post(`/destinations/${destinationId}/book`, bookingData);
+      setBookingSuccess(true);
+      toast.success('Trip booked successfully!');
       onBookingSuccess();
       
       // Reset form after success

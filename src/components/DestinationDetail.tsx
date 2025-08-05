@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { BookingForm } from './BookingForm';
 import { ArrowLeft, Star, MapPin, Clock, Heart, Share2, Calendar, Users, Send, Loader2, AlertCircle } from 'lucide-react';
-import { get, post, fetchAPI } from '../utils/api';
+import { get, post } from '../utils/api';
 import { toast } from 'sonner';
 
 interface DestinationDetailProps {
@@ -75,15 +75,8 @@ export function DestinationDetail({ destinationId, onBack, user }: DestinationDe
 
     try {
       setIsLoading(true);
-      // Try Amplify API first, fallback to direct fetch
-      try {
-        const data = await get(`/destinations/${destinationId}`);
-        setDestination(data.destination || data);
-      } catch (amplifyError) {
-        console.warn('Amplify API failed, using fallback:', amplifyError);
-        const data = await fetchAPI(`/destinations/${destinationId}`);
-        setDestination(data.destination || data);
-      }
+      const data = await get(`/destinations/${destinationId}`);
+      setDestination(data.destination || data);
     } catch (err) {
       console.error('Error fetching destination:', err);
       setError('Failed to load destination details. Please try again.');
@@ -99,21 +92,14 @@ export function DestinationDetail({ destinationId, onBack, user }: DestinationDe
       setIsLoadingComments(true);
       // Try Amplify API first, fallback to direct fetch
       try {
-        const data = await get(`/destinations/${destinationId}/comments`);
-        setComments(data.comments || data || []);
-      } catch (amplifyError) {
-        console.warn('Amplify API failed, using fallback:', amplifyError);
-        const data = await fetchAPI(`/destinations/${destinationId}/comments`);
-        setComments(data.comments || data || []);
-      }
-    } catch (err) {
-      console.error('Error fetching comments:', err);
-    } finally {
-      setIsLoadingComments(false);
-    }
-  };
+  const fetchComments = async () => {
+    if (!destinationId) return;
 
-  const checkUserVisit = async () => {
+    try {
+      setIsLoadingComments(true);
+      const data = await get(`/destinations/${destinationId}/comments`);
+      setComments(data.comments || data || []);
+    } catch (err) {sit = async () => {
     if (!destinationId || !user) return;
 
     try {

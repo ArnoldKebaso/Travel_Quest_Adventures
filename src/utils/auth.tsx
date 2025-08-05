@@ -1,17 +1,17 @@
-import { Auth } from 'aws-amplify';
+import { getCurrentUser as amplifyGetCurrentUser, signOut as amplifySignOut } from 'aws-amplify/auth';
 
-// Simple auth helper functions for AWS Amplify
+// Simple auth helper functions for AWS Amplify v6
 export const getCurrentUser = async () => {
   try {
-    return await Auth.currentAuthenticatedUser();
-  } catch (error) {
+    return await amplifyGetCurrentUser();
+  } catch {
     return null;
   }
 };
 
 export const signOut = async () => {
   try {
-    await Auth.signOut();
+    await amplifySignOut();
   } catch (error) {
     console.error('Error signing out:', error);
   }
@@ -19,9 +19,9 @@ export const signOut = async () => {
 
 export const isAuthenticated = async () => {
   try {
-    await Auth.currentAuthenticatedUser();
+    await amplifyGetCurrentUser();
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 };

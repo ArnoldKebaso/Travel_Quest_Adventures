@@ -10,7 +10,7 @@ import { NewNavigation } from './NewNavigation';
 import { Footer } from './Footer';
 import { ChevronRight, Upload, ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { post, fetchAPI } from '../utils/api';
+import { post } from '../utils/api';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
 
