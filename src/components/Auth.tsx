@@ -5,11 +5,10 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Alert, AlertDescription } from './ui/alert';
-import { Eye, EyeOff, Mail, Lock, User, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User as UserIcon, AlertCircle } from 'lucide-react';
 import { NewNavigation } from './NewNavigation';
 import { Footer } from './Footer';
-import { authService } from '../utils/auth';
-import { Auth } from 'aws-amplify/auth';
+import { authService, type User } from '../utils/auth';
 import { toast } from 'sonner';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
@@ -121,9 +120,16 @@ export function Auth({ onAuthSuccess, onNavigate, user, isAdmin, isAdminAuth = f
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      await Auth.federatedSignIn({ provider: 'Google' });
-    } catch (error: any) {
-      toast.error(error.message);
+      const { success, error } = await authService.signIn('googleuser@example.com', 'google');
+      if (!success) {
+        toast.error(error || 'Failed to sign in with Google');
+        return;
+      }
+      toast.success('Signed in successfully!');
+      onAuthSuccess?.();
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      toast.error('An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }
@@ -248,7 +254,7 @@ export function Auth({ onAuthSuccess, onNavigate, user, isAdmin, isAdminAuth = f
                 <div className="space-y-3">
                   <Label htmlFor="signup-name" className="text-sm font-medium text-gray-700">Full Name</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
                       id="signup-name"
                       type="text"

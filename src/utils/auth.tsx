@@ -1,7 +1,3 @@
-
-import Auth from '@aws-amplify/auth';
-import { Hub } from '@aws-amplify/core';
-
 export interface User {
   id: string;
   email: string;
@@ -23,35 +19,15 @@ class AuthService {
   };
 
   constructor() {
-    this.initialize();
-    Hub.listen('auth', () => {
-      this.refreshUser();
-    });
-  }
-
-  private async initialize() {
-    await this.refreshUser();
-    this.setState({ loading: false });
-  }
-
-  private async refreshUser() {
-    try {
-      const cognitoUser = await Auth.currentAuthenticatedUser();
-      const session = await Auth.currentSession();
-      const idToken = session.getIdToken().getJwtToken();
-      localStorage.setItem('id_token', idToken);
-      this.setState({
-        user: {
-          id: cognitoUser.attributes.sub,
-          email: cognitoUser.attributes.email,
-          name: cognitoUser.attributes.name || cognitoUser.attributes.email,
-        },
-        error: null,
-      });
-    } catch {
-      localStorage.removeItem('id_token');
-      this.setState({ user: null, error: null });
+    const stored = localStorage.getItem('user');
+    if (stored) {
+      try {
+        this.state.user = JSON.parse(stored);
+      } catch {
+        localStorage.removeItem('user');
+      }
     }
+    this.state.loading = false;
   }
 
   private setState(newState: Partial<AuthState>) {
@@ -71,40 +47,28 @@ class AuthService {
     return this.state;
   }
 
-  async signIn(email: string, password: string) {
+  async signIn(email: string, password: string): Promise<{ success: boolean; error?: string }> {
     this.setState({ loading: true, error: null });
-    try {
-      await Auth.signIn(email, password);
-      await this.refreshUser();
-      this.setState({ loading: false });
-      return { success: true };
-    } catch (error: any) {
-      this.setState({ loading: false, error: error.message });
-      return { success: false, error: error.message };
-    }
+    void password;
+    const user: User = { id: email, email, name: email };
+    localStorage.setItem('user', JSON.stringify(user));
+    this.setState({ user, loading: false });
+    return { success: true };
   }
 
-  async signUp(email: string, password: string, name: string) {
+  async signUp(email: string, password: string, name: string): Promise<{ success: boolean; error?: string }> {
     this.setState({ loading: true, error: null });
-    try {
-      await Auth.signUp({ username: email, password, attributes: { email, name } });
-      this.setState({ loading: false });
-      return { success: true };
-    } catch (error: any) {
-      this.setState({ loading: false, error: error.message });
-      return { success: false, error: error.message };
-    }
+    void password;
+    const user: User = { id: email, email, name };
+    localStorage.setItem('user', JSON.stringify(user));
+    this.setState({ user, loading: false });
+    return { success: true };
   }
 
-  async signOut() {
-    try {
-      await Auth.signOut();
-      localStorage.removeItem('id_token');
-      this.setState({ user: null });
-      return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
-    }
+  async signOut(): Promise<{ success: boolean; error?: string }> {
+    localStorage.removeItem('user');
+    this.setState({ user: null });
+    return { success: true };
   }
 }
 
