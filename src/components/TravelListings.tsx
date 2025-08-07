@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { Search, MapPin, Star, Clock, Loader2 } from 'lucide-react';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { Search, Star, Clock, Loader2 } from 'lucide-react';
+import { get } from '../utils/api';
 
 interface TravelListingsProps {
-  onDestinationSelect: (destinationId: string) => void;
+  readonly onDestinationSelect: (destinationId: string) => void;
 }
 
 interface Destination {
@@ -37,30 +37,14 @@ export function TravelListings({ onDestinationSelect }: TravelListingsProps) {
   const [selectedRegion, setSelectedRegion] = useState('All');
   const [sortBy, setSortBy] = useState('rating');
 
-  useEffect(() => {
-    fetchDestinations();
-  }, []);
-
   const fetchDestinations = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-838db481/destinations`, {
-        headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json'
-        }
+      const data = await get('/destinations', { 
+        region: selectedRegion !== 'All' ? selectedRegion : undefined, 
+        category: selectedCategory !== 'All' ? selectedCategory : undefined 
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      setDestinations(data.destinations || []);
+      setDestinations(data.destinations || data || []);
     } catch (err) {
       console.error('Error fetching destinations:', err);
       setError('Failed to load destinations. Please try again.');
@@ -68,6 +52,10 @@ export function TravelListings({ onDestinationSelect }: TravelListingsProps) {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchDestinations();
+  }, [selectedCategory, selectedRegion]);
 
   const filteredDestinations = destinations
     .filter(dest => {

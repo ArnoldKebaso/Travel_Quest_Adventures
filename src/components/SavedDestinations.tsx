@@ -8,7 +8,6 @@ import { Footer } from './Footer';
 import { HeartOff, Luggage } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import type { User } from '@supabase/supabase-js';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact';
 
@@ -21,7 +20,7 @@ interface SavedTripsItem {
 }
 
 interface SavedDestinationsProps {
-  user: User | null;
+  user: any;
   onDestinationSelect: (destinationId: string) => void;
   onNavigate?: (page: Page) => void;
   isAdmin?: boolean;

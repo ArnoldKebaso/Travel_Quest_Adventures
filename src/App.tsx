@@ -23,8 +23,6 @@ import { NewNavigation } from './components/NewNavigation';
 import { NotFound } from './components/NotFound';
 import { ThemeProvider } from './components/ThemeProvider';
 import { Toaster } from './components/ui/sonner';
-import { supabase } from './utils/supabase/client';
-import type { User } from '@supabase/supabase-js';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
 
@@ -33,7 +31,7 @@ export default function App() {
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
   const [selectedTourId, setSelectedTourId] = useState<string | null>(null);
   const [selectedBlogId, setSelectedBlogId] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const useNewDesign = true; // Using new modern design
@@ -111,7 +109,7 @@ export default function App() {
     updateURL(page);
   }, [updateURL]);
 
-  const checkAdminStatus = (currentUser: User | null) => {
+  const checkAdminStatus = (currentUser: any) => {
     // First check if admin is authenticated via localStorage (simple admin login)
     const isAdminAuthenticated = localStorage.getItem('isAdminAuthenticated') === 'true';
     if (isAdminAuthenticated) {
@@ -162,84 +160,55 @@ export default function App() {
       }
     }
 
-    // Check for existing Supabase session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      
-      const adminStatus = checkAdminStatus(currentUser);
-      setIsAdmin(adminStatus);
-      
-      setIsLoading(false);
-    });
+    // Check for existing localStorage session
+    const storedUser = localStorage.getItem('currentUser');
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    
+    if (storedUser && isAuthenticated) {
+      try {
+        const currentUser = JSON.parse(storedUser);
+        setUser(currentUser);
+        
+        const adminStatus = checkAdminStatus(currentUser);
+        setIsAdmin(adminStatus);
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('isAuthenticated');
+      }
+    }
+    
+    setIsLoading(false);
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      
-      const adminStatus = checkAdminStatus(currentUser);
-      setIsAdmin(adminStatus);
-
-      // Handle post-login redirection
-      if (event === 'SIGNED_IN' && currentUser) {
-        if (adminStatus) {
-          // Redirect admin users to admin dashboard
-          navigateToPage('admin-dashboard');
+    // Listen for localStorage auth changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'currentUser' || e.key === 'isAuthenticated') {
+        const storedUser = localStorage.getItem('currentUser');
+        const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+        
+        if (storedUser && isAuthenticated) {
+          try {
+            const currentUser = JSON.parse(storedUser);
+            setUser(currentUser);
+            const adminStatus = checkAdminStatus(currentUser);
+            setIsAdmin(adminStatus);
+          } catch (error) {
+            console.error('Error parsing stored user:', error);
+            setUser(null);
+            setIsAdmin(false);
+          }
         } else {
-          // Redirect regular users to account page
-          navigateToPage('account');
+          setUser(null);
+          setIsAdmin(false);
         }
-      }
-
-      // Handle sign out
-      if (event === 'SIGNED_OUT') {
-        // Clear admin authentication
-        localStorage.removeItem('isAdminAuthenticated');
-        localStorage.removeItem('adminUser');
-        setIsAdmin(false);
-        navigateToPage('home');
-      }
-    });
-
-    // Listen for mock auth changes (for demo mode)
-    const handleMockAuthChange = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const { event: authEvent, session } = customEvent.detail;
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      
-      const adminStatus = checkAdminStatus(currentUser);
-      setIsAdmin(adminStatus);
-
-      // Handle post-login redirection
-      if (authEvent === 'SIGNED_IN' && currentUser) {
-        if (adminStatus) {
-          navigateToPage('admin-dashboard');
-        } else {
-          navigateToPage('account');
-        }
-      }
-
-      if (authEvent === 'SIGNED_OUT') {
-        // Clear admin authentication
-        localStorage.removeItem('isAdminAuthenticated');
-        localStorage.removeItem('adminUser');
-        setIsAdmin(false);
-        navigateToPage('home');
       }
     };
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('supabase-auth-change', handleMockAuthChange);
-    }
+    window.addEventListener('storage', handleStorageChange);
 
     return () => {
-      subscription?.unsubscribe();
       window.removeEventListener('popstate', handlePopState);
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('supabase-auth-change', handleMockAuthChange);
-      }
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, [getPageFromURL, navigateToPage]);
 
@@ -265,8 +234,20 @@ export default function App() {
   };
 
   const handleAuthSuccess = () => {
-    // This will be handled by the auth state change listener
-    // but we can add immediate feedback here if needed
+    // Refresh user state from localStorage after successful auth
+    const storedUser = localStorage.getItem('currentUser');
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    
+    if (storedUser && isAuthenticated) {
+      try {
+        const currentUser = JSON.parse(storedUser);
+        setUser(currentUser);
+        const adminStatus = checkAdminStatus(currentUser);
+        setIsAdmin(adminStatus);
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+      }
+    }
   };
 
   const renderPage = () => {

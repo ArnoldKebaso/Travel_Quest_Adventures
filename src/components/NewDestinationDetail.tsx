@@ -24,7 +24,6 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { User } from '@supabase/supabase-js';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found';
 
@@ -32,7 +31,7 @@ interface DestinationDetailProps {
   destinationId: string | null;
   onBack: () => void;
   onNavigate: (page: Page) => void;
-  user: User | null;
+  user: any;
   isAdmin?: boolean;
 }
 

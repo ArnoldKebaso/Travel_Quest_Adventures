@@ -24,14 +24,13 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
 
 interface TourDetailsProps {
   tourId: string;
   onNavigate: (page: Page) => void;
-  user: SupabaseUser | null;
+  user: any;
   isAdmin?: boolean;
 }
 

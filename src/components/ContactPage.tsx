@@ -10,13 +10,12 @@ import { NewNavigation } from './NewNavigation';
 import { Footer } from './Footer';
 import { Phone, Mail, MapPin, Send, Clock, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import type { User } from '@supabase/supabase-js';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact';
 
 interface ContactPageProps {
   onNavigate: (page: Page) => void;
-  user: User | null;
+  user: any;
   isAdmin?: boolean;
 }
 

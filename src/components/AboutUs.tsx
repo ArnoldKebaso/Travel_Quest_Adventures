@@ -4,13 +4,12 @@ import { Card, CardContent } from './ui/card';
 import { NewNavigation } from './NewNavigation';
 import { Footer } from './Footer';
 import { Compass, Heart, Leaf, Users, Award, Globe } from 'lucide-react';
-import type { User } from '@supabase/supabase-js';
 
 type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact';
 
 interface AboutUsProps {
   onNavigate: (page: Page) => void;
-  user: User | null;
+  user: any;
   isAdmin?: boolean;
 }
 
