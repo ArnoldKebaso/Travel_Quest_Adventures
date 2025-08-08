@@ -60,8 +60,6 @@ Resources:
             RestApiId: !Ref TravelQuestApi
             Path: /destinations
             Method: get
-            Auth:
-              Authorizer: NONE
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref DestinationsTable
@@ -79,8 +77,6 @@ Resources:
             RestApiId: !Ref TravelQuestApi
             Path: /destinations/{id}
             Method: get
-            Auth:
-              Authorizer: NONE
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref DestinationsTable
