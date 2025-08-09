@@ -1,0 +1,180 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  TravelQuest Backend - AWS Academy Compatible
+  Minimal template for restricted IAM environments (uses pre-created LabRole).
+
+Globals:
+  Function:
+    Runtime: nodejs18.x
+    Timeout: 30
+    MemorySize: 512
+    Architectures: [ x86_64 ]
+    # Use the pre-created Learner Lab execution role so no new IAM roles are created
+    Role: !Sub arn:aws:iam::${AWS::AccountId}:role/LabRole
+    Environment:
+      Variables:
+        NODE_ENV: production
+        DESTINATIONS_TABLE: !Ref DestinationsTable
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    Description: Environment stage (dev, prod, etc.)
+
+Resources:
+  TravelQuestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+      Cors:
+        # SAM expects these as single-quoted strings inside a string
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+
+  DestinationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${AWS::StackName}-destinations"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  GetAllDestinationsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/destinationHandler.getAllDestinations
+      Events:
+        ApiGetAll:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TravelQuestApi
+            Path: /destinations
+            Method: get
+      # IMPORTANT: No Policies block here (we're using the existing LabRole)
+
+  GetDestinationByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/destinationHandler.getDestinationById
+      Events:
+        ApiGetOne:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TravelQuestApi
+            Path: /destinations/{id}
+            Method: get
+      # IMPORTANT: No Policies block here (we're using the existing LabRole)
+
+Outputs:
+  TravelQuestApiUrl:
+    Description: "API Gateway invoke URL"
+    Value: !Sub "https://${TravelQuestApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
+
+  DestinationsTableName:
+    Description: "DynamoDB Destinations Table Name"
+    Value: !Ref DestinationsTable
+
+
+# AWSTemplateFormatVersion: '2010-09-09'
+# Transform: AWS::Serverless-2016-10-31
+# Description: >
+#   TravelQuest Backend - AWS Academy Compatible
+#   Simplified version for AWS Academy environments with limited IAM permissions.
+
+# # Reduced globals to avoid permission issues
+# Globals:
+#   Function:
+#     Timeout: 30
+#     MemorySize: 512
+#     Runtime: nodejs18.x
+#     Architectures: [ x86_64 ]
+#     Environment:
+#       Variables:
+#         NODE_ENV: production
+#         DESTINATIONS_TABLE: !Ref DestinationsTable
+#     Role: !Sub arn:aws:iam::${AWS::AccountId}:role/LabRole 
+
+# Parameters:
+#   Stage:
+#     Type: String
+#     Default: dev
+#     Description: Environment stage
+
+# Resources:
+#   # Simple API Gateway without Cognito
+#   TravelQuestApi:
+#     Type: AWS::Serverless::Api
+#     Properties:
+#       StageName: !Ref Stage
+#       Cors:
+#         AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+#         AllowHeaders: "'Content-Type,Authorization'"
+#         AllowOrigin: "'*'"
+
+#   # DynamoDB Table - Destinations only for now
+#   DestinationsTable:
+#     Type: AWS::DynamoDB::Table
+#     Properties:
+#       TableName: !Sub "${AWS::StackName}-destinations"
+#       BillingMode: PAY_PER_REQUEST
+#       AttributeDefinitions:
+#         - AttributeName: id
+#           AttributeType: S
+#       KeySchema:
+#         - AttributeName: id
+#           KeyType: HASH
+
+#   # Single Lambda Function - GetAllDestinations
+#   GetAllDestinationsFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: dist/
+#       Handler: handlers/destinationHandler.getAllDestinations
+#       Events:
+#         Api:
+#           Type: Api
+#           Properties:
+#             RestApiId: !Ref TravelQuestApi
+#             Path: /destinations
+#             Method: get
+#       Policies:
+#         - DynamoDBReadPolicy:
+#             TableName: !Ref DestinationsTable
+
+#   # Single Lambda Function - GetDestinationById
+#   GetDestinationByIdFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: dist/
+#       Handler: handlers/destinationHandler.getDestinationById
+#       Events:
+#         Api:
+#           Type: Api
+#           Properties:
+#             RestApiId: !Ref TravelQuestApi
+#             Path: /destinations/{id}
+#             Method: get
+#       Policies:
+#         - DynamoDBReadPolicy:
+#             TableName: !Ref DestinationsTable
+
+# # Simple outputs
+# Outputs:
+#   TravelQuestApi:
+#     Description: "API Gateway endpoint URL"
+#     Value: !Sub "https://${TravelQuestApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
+#     Export:
+#       Name: !Sub "${AWS::StackName}-ApiUrl"
+
+#   DestinationsTableName:
+#     Description: "DynamoDB Destinations Table Name"
+#     Value: !Ref DestinationsTable
