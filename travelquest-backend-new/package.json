@@ -44,7 +44,7 @@
     "docs:generate": "swagger-jsdoc -d docs/swagger-definition.js -o docs/api-spec.json src/handlers/*.ts",
     "docs:validate": "swagger-parser validate docs/api-spec.json",
     "clean": "rm -rf dist node_modules .aws-sam coverage test-results.xml eslint-report.json",
-    "prepare": "husky install",
+    "postinstall": "echo 'dependencies installed'",
     "pre-commit": "lint-staged",
     "pre-push": "npm run test && npm run lint:check",
     "release": "standard-version",

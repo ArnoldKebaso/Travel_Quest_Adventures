@@ -1,0 +1,20 @@
+[
+  {
+    "Create": {
+      "IndexName": "region-category-index",
+      "KeySchema": [
+        {
+          "AttributeName": "region",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "category", 
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    }
+  }
+]

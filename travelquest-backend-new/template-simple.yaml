@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
   TravelQuest Backend - AWS Academy Compatible
-  Minimal template for restricted IAM environments (uses pre-created LabRole).
+  Lambda functions only (DynamoDB tables already exist).
 
 Globals:
   Function:
@@ -10,12 +10,13 @@ Globals:
     Timeout: 30
     MemorySize: 512
     Architectures: [ x86_64 ]
-    # Use the pre-created Learner Lab execution role so no new IAM roles are created
-    Role: !Sub arn:aws:iam::${AWS::AccountId}:role/LabRole
     Environment:
       Variables:
         NODE_ENV: production
-        DESTINATIONS_TABLE: !Ref DestinationsTable
+        DESTINATIONS_TABLE: travelquest-destinations
+        TOURS_TABLE: travelquest-tours
+        BLOGS_TABLE: travelquest-blogs
+        COMMENTS_TABLE: travelquest-comments
 
 Parameters:
   Stage:
@@ -34,23 +35,13 @@ Resources:
         AllowHeaders: "'Content-Type,Authorization'"
         AllowOrigin: "'*'"
 
-  DestinationsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub "${AWS::StackName}-destinations"
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-
+  # Lambda Functions (no table creation - tables already exist)
   GetAllDestinationsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dist/
-      Handler: handlers/destinationHandler.getAllDestinations
+      CodeUri: ./
+      Handler: dist/handlers/destinationHandler.getAllDestinations
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/LabRole
       Events:
         ApiGetAll:
           Type: Api
@@ -58,13 +49,13 @@ Resources:
             RestApiId: !Ref TravelQuestApi
             Path: /destinations
             Method: get
-      # IMPORTANT: No Policies block here (we're using the existing LabRole)
 
   GetDestinationByIdFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: dist/
-      Handler: handlers/destinationHandler.getDestinationById
+      CodeUri: ./
+      Handler: dist/handlers/destinationHandler.getDestinationById
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/LabRole
       Events:
         ApiGetOne:
           Type: Api
@@ -72,16 +63,73 @@ Resources:
             RestApiId: !Ref TravelQuestApi
             Path: /destinations/{id}
             Method: get
-      # IMPORTANT: No Policies block here (we're using the existing LabRole)
+
+  # Tours Functions
+  GetAllToursFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: dist/handlers/tourHandler.getAllTours
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/LabRole
+      Events:
+        ApiGetAll:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TravelQuestApi
+            Path: /tours
+            Method: get
+
+  GetTourByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: dist/handlers/tourHandler.getTourById
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/LabRole
+      Events:
+        ApiGetOne:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TravelQuestApi
+            Path: /tours/{id}
+            Method: get
+
+  # Blog Functions
+  GetAllBlogsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: dist/handlers/blogHandler.getAllBlogs
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/LabRole
+      Events:
+        ApiGetAll:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TravelQuestApi
+            Path: /blogs
+            Method: get
+
+  GetBlogByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: dist/handlers/blogHandler.getBlogById
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/LabRole
+      Events:
+        ApiGetOne:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TravelQuestApi
+            Path: /blogs/{id}
+            Method: get
 
 Outputs:
   TravelQuestApiUrl:
     Description: "API Gateway invoke URL"
     Value: !Sub "https://${TravelQuestApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
 
-  DestinationsTableName:
-    Description: "DynamoDB Destinations Table Name"
-    Value: !Ref DestinationsTable
+  ExistingTablesInfo:
+    Description: "DynamoDB Tables (already created manually)"
+    Value: "travelquest-destinations, travelquest-tours, travelquest-blogs, travelquest-comments"
 
 
 # AWSTemplateFormatVersion: '2010-09-09'
