@@ -57,7 +57,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./
-      Handler: dist/handlers/destinationHandler.getDestinationById
+      Handler: simple-destination-handler.getAllDestinations
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/LabRole
       Events:
         ApiGetOne:
@@ -72,8 +72,11 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./
-      Handler: dist/handlers/tourHandler.getAllTours
+      Handler: simple-destination-handler.getAllDestinations
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/LabRole
+      Environment:
+        Variables:
+          DESTINATIONS_TABLE: travelquest-tours
       Events:
         ApiGetAll:
           Type: Api
@@ -86,8 +89,11 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./
-      Handler: dist/handlers/tourHandler.getTourById
+      Handler: simple-destination-handler.getAllDestinations
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/LabRole
+      Environment:
+        Variables:
+          DESTINATIONS_TABLE: travelquest-tours
       Events:
         ApiGetOne:
           Type: Api
@@ -101,8 +107,11 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./
-      Handler: dist/handlers/blogHandler.getAllBlogs
+      Handler: simple-destination-handler.getAllDestinations
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/LabRole
+      Environment:
+        Variables:
+          DESTINATIONS_TABLE: travelquest-blogs
       Events:
         ApiGetAll:
           Type: Api
@@ -115,8 +124,11 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./
-      Handler: dist/handlers/blogHandler.getBlogById
+      Handler: simple-destination-handler.getAllDestinations
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/LabRole
+      Environment:
+        Variables:
+          DESTINATIONS_TABLE: travelquest-blogs
       Events:
         ApiGetOne:
           Type: Api
