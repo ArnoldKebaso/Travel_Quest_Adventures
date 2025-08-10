@@ -40,8 +40,11 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./
-      Handler: dist/handlers/destinationHandler.getAllDestinations
+      Handler: simple-destination-handler.getAllDestinations
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/LabRole
+      Environment:
+        Variables:
+          DESTINATIONS_TABLE: travelquest-destinations
       Events:
         ApiGetAll:
           Type: Api
