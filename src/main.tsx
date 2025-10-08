@@ -4,17 +4,17 @@ import './index.css'
 import App from './App.tsx'
 
 // AWS Amplify Configuration
-import { Amplify } from 'aws-amplify';
-import awsExports from './aws-exports';
-import { Authenticator } from '@aws-amplify/ui-react';
+// import { Amplify } from 'aws-amplify';
+// import awsExports from './aws-exports';
+// import { Authenticator } from '@aws-amplify/ui-react';
 
 // Configure Amplify with basic settings
-Amplify.configure(awsExports);
+// Amplify.configure(awsExports);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Authenticator.Provider>
+    {/* <Authenticator.Provider> */}
       <App />
-    </Authenticator.Provider>
+    {/* </Authenticator.Provider> */}
   </StrictMode>,
 )
