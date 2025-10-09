@@ -1,377 +1,105 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AuthProvider, useAuth } from './utils/authContext';
 import { Home } from './components/Home';
-import { Home as NewHome } from './components/NewHome';
 import { TravelListings } from './components/TravelListings';
-import { NewTravelListings } from './components/NewTravelListings';
+import { Tours } from './components/Tours';
+import { Blogs } from './components/Blogs';
+import { About } from './components/About';
+import { Contact } from './components/Contact';
 import { DestinationDetail } from './components/DestinationDetail';
-import { NewDestinationDetail } from './components/NewDestinationDetail';
-import { BlogsPage } from './components/BlogsPage';
-import { ToursPage } from './components/ToursPage';
-import { AboutUs } from './components/AboutUs';
-import { ContactPage } from './components/ContactPage';
-import { UserAccount } from './components/UserAccount';
-import { SavedDestinations } from './components/SavedDestinations';
-import { TourDetails } from './components/TourDetails';
-import { BlogDetails } from './components/BlogDetails';
-import { Auth } from './components/Auth';
-import { AdminAuth } from './components/AdminAuth';
-import { AdminDashboard } from './components/AdminDashboard';
-import { AdminAddGuide } from './components/AdminAddGuide';
-import { AdminCommentModeration } from './components/AdminCommentModeration';
-import { AdminUsers } from './components/AdminUsers';
-import { NewNavigation } from './components/NewNavigation';
-import { NotFound } from './components/NotFound';
-import { ThemeProvider } from './components/ThemeProvider';
+import { Profile } from './components/Profile';
+import { Navigation } from './components/Navigation';
+import { Footer } from './components/Footer';
+import { Login } from './components/Login';
+import { AdminPanel } from './components/AdminPanel';
 import { Toaster } from './components/ui/sonner';
 
-type Page = 'home' | 'listings' | 'destination' | 'account' | 'saved' | 'auth' | 'admin-auth' | 'admin-dashboard' | 'admin-add-guide' | 'admin-comments' | 'admin-users' | 'not-found' | 'blogs' | 'tours' | 'about' | 'contact' | 'tour-details' | 'blog-details';
-
-export default function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('home');
-  const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
-  const [selectedTourId, setSelectedTourId] = useState<string | null>(null);
-  const [selectedBlogId, setSelectedBlogId] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const useNewDesign = true; // Using new modern design
-
-  // Valid routes mapping
-  const validRoutes = useMemo(() => ({
-    '/': 'home',
-    '/home': 'home',
-    '/listings': 'listings',
-    '/destination': 'destination',
-    '/blogs': 'blogs',
-    '/tours': 'tours',
-    '/tour-details': 'tour-details',
-    '/blog-details': 'blog-details',
-    '/about': 'about',
-    '/contact': 'contact',
-    '/account': 'account',
-    '/saved': 'saved',
-    '/auth': 'auth',
-    '/admin-auth': 'admin-auth',
-    '/admin-dashboard': 'admin-dashboard',
-    '/admin-add-guide': 'admin-add-guide',
-    '/admin-comments': 'admin-comments',
-    '/admin-users': 'admin-users',
-    '/404': 'not-found'
-  } as Record<string, Page>), []);
-
-  // Function to get page from URL
-  const getPageFromURL = useCallback((): Page => {
-    const pathname = window.location.pathname;
-    
-    // Handle destination with query params
-    if (pathname === '/destination' && window.location.search) {
-      const params = new URLSearchParams(window.location.search);
-      const destinationId = params.get('id');
-      if (destinationId) {
-        setSelectedDestination(destinationId);
-      }
-    }
-    
-    // Handle tour details with query params
-    if (pathname === '/tour-details' && window.location.search) {
-      const params = new URLSearchParams(window.location.search);
-      const tourId = params.get('id');
-      if (tourId) {
-        setSelectedTourId(tourId);
-      }
-    }
-    
-    // Handle blog details with query params
-    if (pathname === '/blog-details' && window.location.search) {
-      const params = new URLSearchParams(window.location.search);
-      const blogId = params.get('id');
-      if (blogId) {
-        setSelectedBlogId(blogId);
-      }
-    }
-    
-    return validRoutes[pathname] || 'not-found';
-  }, [validRoutes]);
-
-  // Function to update URL when page changes
-  const updateURL = useCallback((page: Page) => {
-    const url = Object.keys(validRoutes).find(key => validRoutes[key] === page);
-    if (page === 'not-found') {
-      window.history.replaceState(null, '', '/404');
-    } else if (url && window.location.pathname !== url) {
-      window.history.pushState(null, '', url);
-    }
-  }, [validRoutes]);
-
-  // Enhanced setCurrentPage that syncs with URL
-  const navigateToPage = useCallback((page: Page) => {
-    setCurrentPage(page);
-    updateURL(page);
-  }, [updateURL]);
-
-  const checkAdminStatus = (currentUser: any) => {
-    // First check if admin is authenticated via localStorage (simple admin login)
-    const isAdminAuthenticated = localStorage.getItem('isAdminAuthenticated') === 'true';
-    if (isAdminAuthenticated) {
-      return true;
-    }
-
-    // Fallback to Supabase user check for regular users
-    if (!currentUser) return false;
-    
-    // Check if user is admin through multiple methods
-    const isAdminByEmail = currentUser.email?.includes('admin');
-    const isAdminByMetadata = currentUser.user_metadata?.role === 'admin';
-    const isAdminByAppMetadata = currentUser.app_metadata?.role === 'admin';
-    
-    return isAdminByEmail || isAdminByMetadata || isAdminByAppMetadata;
-  };
-
-  useEffect(() => {
-    // Set initial page based on URL
-    const initialPage = getPageFromURL();
-    setCurrentPage(initialPage);
-
-    // Handle browser back/forward navigation
-    const handlePopState = () => {
-      const page = getPageFromURL();
-      setCurrentPage(page);
-    };
-
-    window.addEventListener('popstate', handlePopState);
-
-
-    // Check for admin authentication first
-    const isAdminAuthenticated = localStorage.getItem('isAdminAuthenticated') === 'true';
-    if (isAdminAuthenticated) {
-      const adminUserData = localStorage.getItem('adminUser');
-      if (adminUserData) {
-        try {
-          const adminUser = JSON.parse(adminUserData);
-          setUser(adminUser);
-          setIsAdmin(true);
-          setIsLoading(false);
-          return;
-        } catch (error) {
-          console.error('Error parsing admin user data:', error);
-          localStorage.removeItem('isAdminAuthenticated');
-          localStorage.removeItem('adminUser');
-        }
-      }
-    }
-
-    // Check for existing localStorage session
-    const storedUser = localStorage.getItem('currentUser');
-    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-    
-    if (storedUser && isAuthenticated) {
-      try {
-        const currentUser = JSON.parse(storedUser);
-        setUser(currentUser);
-        
-        const adminStatus = checkAdminStatus(currentUser);
-        setIsAdmin(adminStatus);
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-        localStorage.removeItem('currentUser');
-        localStorage.removeItem('isAuthenticated');
-      }
-    }
-    
-    setIsLoading(false);
-
-    // Listen for localStorage auth changes
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'currentUser' || e.key === 'isAuthenticated') {
-        const storedUser = localStorage.getItem('currentUser');
-        const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-        
-        if (storedUser && isAuthenticated) {
-          try {
-            const currentUser = JSON.parse(storedUser);
-            setUser(currentUser);
-            const adminStatus = checkAdminStatus(currentUser);
-            setIsAdmin(adminStatus);
-          } catch (error) {
-            console.error('Error parsing stored user:', error);
-            setUser(null);
-            setIsAdmin(false);
-          }
-        } else {
-          setUser(null);
-          setIsAdmin(false);
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [getPageFromURL, navigateToPage]);
-
-  const handleDestinationSelect = (destinationId: string) => {
-    setSelectedDestination(destinationId);
-    setCurrentPage('destination');
-    // Update URL with destination ID as query parameter
-    window.history.pushState(null, '', `/destination?id=${destinationId}`);
-  };
-
-  const handleTourSelect = (tourId: string) => {
-    setSelectedTourId(tourId);
-    setCurrentPage('tour-details');
-    // Update URL with tour ID as query parameter
-    window.history.pushState(null, '', `/tour-details?id=${tourId}`);
-  };
-
-  const handleBlogSelect = (blogId: string) => {
-    setSelectedBlogId(blogId);
-    setCurrentPage('blog-details');
-    // Update URL with blog ID as query parameter
-    window.history.pushState(null, '', `/blog-details?id=${blogId}`);
-  };
-
-  const handleAuthSuccess = () => {
-    // Refresh user state from localStorage after successful auth
-    const storedUser = localStorage.getItem('currentUser');
-    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-    
-    if (storedUser && isAuthenticated) {
-      try {
-        const currentUser = JSON.parse(storedUser);
-        setUser(currentUser);
-        const adminStatus = checkAdminStatus(currentUser);
-        setIsAdmin(adminStatus);
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-      }
-    }
-  };
-
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'home':
-        return useNewDesign ? (
-          <NewHome onDestinationSelect={handleDestinationSelect} onNavigate={navigateToPage} />
-        ) : (
-          <Home onDestinationSelect={handleDestinationSelect} onNavigate={navigateToPage} />
-        );
-      case 'listings':
-        return useNewDesign ? (
-          <NewTravelListings onDestinationSelect={handleDestinationSelect} onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />
-        ) : (
-          <TravelListings onDestinationSelect={handleDestinationSelect} />
-        );
-      case 'destination':
-        return useNewDesign ? (
-          <NewDestinationDetail 
-            destinationId={selectedDestination} 
-            onBack={() => navigateToPage('listings')} 
-            onNavigate={navigateToPage}
-            user={user}
-            isAdmin={isAdmin}
-          />
-        ) : (
-          <DestinationDetail 
-            destinationId={selectedDestination} 
-            onBack={() => navigateToPage('listings')} 
-            user={user}
-          />
-        );
-      case 'account':
-        return user ? (
-          <UserAccount user={user} onNavigate={navigateToPage} />
-        ) : (
-          <Auth onAuthSuccess={handleAuthSuccess} />
-        );
-      case 'saved':
-        return user ? (
-          <SavedDestinations user={user} onDestinationSelect={handleDestinationSelect} />
-        ) : (
-          <Auth onAuthSuccess={handleAuthSuccess} />
-        );
-      case 'auth':
-        return <Auth onAuthSuccess={handleAuthSuccess} onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
-      case 'admin-auth':
-        return <AdminAuth onAuthSuccess={handleAuthSuccess} onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
-      case 'admin-dashboard':
-        return isAdmin ? (
-          <AdminDashboard onNavigate={navigateToPage} />
-        ) : (
-          <AdminAuth onAuthSuccess={handleAuthSuccess} onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />
-        );
-      case 'admin-add-guide':
-        return isAdmin ? (
-          <AdminAddGuide onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />
-        ) : (
-          <AdminAuth onAuthSuccess={handleAuthSuccess} onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />
-        );
-      case 'admin-comments':
-        return isAdmin ? (
-          <AdminCommentModeration onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />
-        ) : (
-          <AdminAuth onAuthSuccess={handleAuthSuccess} onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />
-        );
-      case 'admin-users':
-        return isAdmin ? (
-          <AdminUsers onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />
-        ) : (
-          <AdminAuth onAuthSuccess={handleAuthSuccess} onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />
-        );
-      case 'blogs':
-        return <BlogsPage onNavigate={navigateToPage} onBlogSelect={handleBlogSelect} user={user} isAdmin={isAdmin} />;
-      case 'blog-details':
-        return <BlogDetails blogId={selectedBlogId || "1"} onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
-      case 'tours':
-        return <ToursPage onNavigate={navigateToPage} onTourSelect={handleTourSelect} user={user} isAdmin={isAdmin} />;
-      case 'tour-details':
-        return <TourDetails tourId={selectedTourId || "1"} onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
-      case 'about':
-        return <AboutUs onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
-      case 'contact':
-        return <ContactPage onNavigate={navigateToPage} user={user} isAdmin={isAdmin} />;
-      case 'not-found':
-        return <NotFound onNavigate={navigateToPage} />;
-      default:
-        return <NotFound onNavigate={navigateToPage} />;
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold">TQ</span>
-          </div>
-          <p className="text-gray-600">Loading TravelQuest...</p>
-        </div>
-      </div>
-    );
+// Protected Route for Profile
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const location = useLocation();
+  
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
+  
+  return <>{children}</>;
+}
 
-  // Don't show navigation on auth pages
-  const showNavigation = !['auth', 'admin-auth'].includes(currentPage);
+// Admin Route
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const location = useLocation();
+  
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  
+  if (user.role !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <>{children}</>;
+}
 
+function AppContent() {
+  const { logout, user } = useAuth();
+  
   return (
-    <ThemeProvider>
-      <div className="min-h-screen bg-background">
-        {showNavigation && (
-          <NewNavigation 
-            currentPage={currentPage} 
-            onNavigate={navigateToPage} 
-            user={user}
-            isAdmin={isAdmin}
-          />
-        )}
-        <main className="">
-          {renderPage()}
-        </main>
-        <Toaster />
-      </div>
-    </ThemeProvider>
+    <Routes>
+      {/* Admin Routes */}
+      <Route 
+        path="/admin/*" 
+        element={
+          <AdminRoute>
+            <AdminPanel onLogout={logout} username={user?.username || 'Admin'} />
+          </AdminRoute>
+        } 
+      />
+      
+      {/* Public Routes with Layout */}
+      <Route path="/login" element={<Login />} />
+      
+      {/* Routes with Navigation and Footer */}
+      <Route path="/*" element={
+        <div className="min-h-screen bg-background">
+          <Navigation />
+          <main className="pt-16">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/destinations" element={<TravelListings />} />
+              <Route path="/destinations/:id" element={<DestinationDetail />} />
+              <Route path="/tours" element={<Tours />} />
+              <Route path="/blogs" element={<Blogs />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                } 
+              />
+              {/* Catch all - redirect to home */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      } />
+    </Routes>
   );
 }
 
+export default function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <AppContent />
+        <Toaster />
+      </AuthProvider>
+    </Router>
+  );
+}

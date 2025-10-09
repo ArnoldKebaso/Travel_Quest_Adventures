@@ -1,554 +1,301 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
+import { Avatar, AvatarFallback } from './ui/avatar';
 import { Textarea } from './ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { BookingForm } from './BookingForm';
-import { ArrowLeft, Star, MapPin, Clock, Heart, Share2, Calendar, Users, Send, Loader2, AlertCircle } from 'lucide-react';
-import { get, post } from '../utils/api';
+import { ArrowLeft, Star, MapPin, Clock, Calendar, MessageSquare } from 'lucide-react';
+import { destinations, reviews } from '../utils/staticData';
+import { useAuth } from '../utils/authContext';
 import { toast } from 'sonner';
 
-interface DestinationDetailProps {
-  destinationId: string | null;
-  onBack: () => void;
-  user: any;
-}
-
-interface Destination {
-  id: string;
-  name: string;
-  description: string;
-  longDescription: string;
-  images: string[];
-  rating: number;
-  reviews: number;
-  category: string;
-  region: string;
-  duration: string;
-  price: string;
-  highlights: string[];
-  bestTime: string;
-  difficulty: string;
-  groupSize: string;
-}
-
-interface Comment {
-  id: string;
-  userId: string;
-  userName: string;
-  comment: string;
-  rating: number;
-  date: string;
-  created_at?: string;
-}
-
-export function DestinationDetail({ destinationId, onBack, user }: DestinationDetailProps) {
-  const [destination, setDestination] = useState<Destination | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingComments, setIsLoadingComments] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export function DestinationDetail() {
+  const { id: destinationId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedImage, setSelectedImage] = useState(0);
-  const [newComment, setNewComment] = useState('');
-  const [newRating, setNewRating] = useState(5);
-  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [hasVisited, setHasVisited] = useState(false);
-  const [isCheckingVisit, setIsCheckingVisit] = useState(false);
-  const [isTogglingSave, setIsTogglingSave] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  
+  const destination = destinations.find(d => d.id === destinationId);
+  const destinationReviews = reviews.filter(r => r.destination_id === destinationId && r.status === 'approved');
 
   useEffect(() => {
-    if (destinationId) {
-      fetchDestination();
-      fetchComments();
-      if (user) {
-        checkUserVisit();
-        checkSavedStatus();
-      }
-    }
-  }, [destinationId, user]);
+    setSelectedImage(0);
+  }, [destinationId]);
 
-  const fetchDestination = async () => {
-    if (!destinationId) return;
-
-    try {
-      setIsLoading(true);
-      const data = await get(`/destinations/${destinationId}`);
-      setDestination(data.destination || data);
-    } catch (err) {
-      console.error('Error fetching destination:', err);
-      setError('Failed to load destination details. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchComments = async () => {
-    if (!destinationId) return;
-
-    try {
-      setIsLoadingComments(true);
-      const data = await get(`/destinations/${destinationId}/comments`);
-      setComments(data.comments || data || []);
-    } catch (err) {
-      console.error('Error fetching comments:', err);
-      setComments([]);
-    } finally {
-      setIsLoadingComments(false);
-    }
-  };
-
-  const checkUserVisit = async () => {
-    if (!destinationId || !user) return;
-
-    try {
-      setIsCheckingVisit(true);
-      // TODO: Implement visit check with new API
-      setHasVisited(false);
-    } catch (err) {
-      console.error('Error checking visit status:', err);
-    } finally {
-      setIsCheckingVisit(false);
-    }
-  };
-
-  const handleSubmitComment = async () => {
-    if (!newComment.trim() || !user || !destinationId) return;
-
-    try {
-      setIsSubmittingComment(true);
-      
-      // Submit comment using API
-      const commentData = {
-        comment: newComment,
-        rating: newRating
-      };
-
-      try {
-        const data = await post(`/destinations/${destinationId}/comments`, commentData);
-        // Add the new comment to the list
-        setComments([data.comment || data, ...comments]);
-        setNewComment('');
-        setNewRating(5);
-        toast.success('Review posted successfully!');
-      } catch (apiError) {
-        console.warn('API failed:', apiError);
-        // Fallback: add comment locally for now
-        const newCommentObj: Comment = {
-          id: Date.now().toString(),
-          userId: user?.id || 'anonymous',
-          userName: user?.name || 'Anonymous',
-          comment: newComment,
-          rating: newRating,
-          date: new Date().toISOString(),
-          created_at: new Date().toISOString()
-        };
-        setComments([newCommentObj, ...comments]);
-        setNewComment('');
-        setNewRating(5);
-        toast.success('Review posted successfully!');
-      }
-    } catch (err) {
-      console.error('Error submitting comment:', err);
-      toast.error(err instanceof Error ? err.message : 'Failed to submit comment. Please try again.');
-    } finally {
-      setIsSubmittingComment(false);
-    }
-  };
-
-  const checkSavedStatus = async () => {
-    if (!destinationId || !user) return;
-
-    try {
-      // TODO: Implement saved status check with new API
-      setIsSaved(false);
-    } catch (err) {
-      console.error('Error checking saved status:', err);
-    }
-  };
-
-  const handleToggleSave = async () => {
-    if (!destinationId || !user || isTogglingSave) return;
-
-    try {
-      setIsTogglingSave(true);
-      // TODO: Implement save/unsave with new API
-      setIsSaved(!isSaved);
-      toast.success(isSaved ? 'Destination removed from saved list' : 'Destination saved successfully!');
-    } catch (err) {
-      console.error('Error toggling save status:', err);
-      toast.error('Failed to update saved status');
-    } finally {
-      setIsTogglingSave(false);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffTime = Math.abs(now.getTime() - date.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      if (diffDays === 1) return '1 day ago';
-      if (diffDays < 7) return `${diffDays} days ago`;
-      if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
-      return `${Math.ceil(diffDays / 30)} months ago`;
-    } catch {
-      return 'Recently';
-    }
-  };
-
-  const getUserInitials = (userName: string | undefined | null) => {
-    if (!userName || typeof userName !== 'string') {
-      return 'U';
-    }
-    
-    try {
-      return userName
-        .split(' ')
-        .map(n => n[0])
-        .join('')
-        .toUpperCase()
-        .substring(0, 2);
-    } catch {
-      return 'U';
-    }
-  };
-
-  if (isLoading) {
+  if (!destination) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading destination...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !destination) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">
-            {error || 'Destination not found'}
-          </h2>
-          <Button onClick={onBack} className="cursor-pointer">Go Back</Button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-16 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Button variant="ghost" onClick={onBack} className="flex items-center space-x-2 cursor-pointer">
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back to Destinations</span>
+      <div className="min-h-screen bg-background py-8 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-20">
+            <p className="text-muted-foreground mb-4">Destination not found</p>
+            <Button onClick={() => navigate('/destinations')} className="cursor-pointer">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Destinations
             </Button>
-            <div className="flex items-center space-x-2">
-              {user && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleToggleSave}
-                  disabled={isTogglingSave}
-                  className={`cursor-pointer ${isSaved ? 'text-red-500' : ''}`}
-                >
-                  <Heart className={`w-4 h-4 mr-2 ${isSaved ? 'fill-current' : ''}`} />
-                  {isSaved ? 'Saved' : 'Save'}
-                </Button>
-              )}
-              <Button variant="ghost" size="sm" className="cursor-pointer">
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
-              </Button>
-            </div>
           </div>
         </div>
       </div>
+    );
+  }
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            {/* Image Gallery */}
-            <div className="mb-8">
-              <div className="relative rounded-lg overflow-hidden mb-4">
+  const allImages = [destination.image_url, ...(destination.gallery_urls || [])];
+  const averageRating = destinationReviews.length > 0
+    ? (destinationReviews.reduce((sum, r) => sum + r.rating, 0) / destinationReviews.length).toFixed(1)
+    : '4.8';
+
+  return (
+    <div className="min-h-screen bg-background py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/destinations')}
+          className="mb-6 cursor-pointer"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Destinations
+        </Button>
+
+        {/* Image Gallery */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+          <div className="relative h-96 lg:h-[600px] rounded-lg overflow-hidden">
+            <ImageWithFallback
+              src={allImages[selectedImage]}
+              alt={destination.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {allImages.slice(0, 4).map((img, index) => (
+              <div
+                key={index}
+                className={`relative h-44 lg:h-[290px] rounded-lg overflow-hidden cursor-pointer ${
+                  selectedImage === index ? 'ring-2 ring-primary' : ''
+                }`}
+                onClick={() => setSelectedImage(index)}
+              >
                 <ImageWithFallback
-                  src={destination.images?.[selectedImage] || destination.images?.[0] || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&h=600&fit=crop'}
-                  alt={destination.name}
-                  className="w-full h-96 object-cover"
+                  src={img}
+                  alt={`${destination.title} ${index + 1}`}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform"
                 />
               </div>
-              {destination.images && destination.images.length > 1 && (
-                <div className="grid grid-cols-4 gap-2">
-                  {destination.images.slice(0, 4).map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      className={`relative rounded-lg overflow-hidden cursor-pointer ${
-                        selectedImage === index ? 'ring-2 ring-primary' : ''
-                      }`}
-                    >
-                      <ImageWithFallback
-                        src={image}
-                        alt={`${destination.name} ${index + 1}`}
-                        className="w-full h-20 object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            ))}
+          </div>
+        </div>
 
-            {/* Title and Basic Info */}
-            <div className="mb-8">
-              <div className="flex items-center space-x-4 mb-4">
-                <Badge variant="secondary">{destination.category}</Badge>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Header */}
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <Badge>{destination.category}</Badge>
                 <Badge variant="outline">{destination.region}</Badge>
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-4">{destination.name}</h1>
-              <div className="flex items-center space-x-6 text-muted-foreground mb-4">
-                <div className="flex items-center space-x-1">
-                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                  <span className="font-medium">{destination.rating}</span>
-                  <span>({destination.reviews} reviews)</span>
+              <h1 className="mb-2">{destination.title}</h1>
+              <div className="flex items-center gap-4 text-muted-foreground mb-4">
+                <div className="flex items-center">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  <span>{destination.location}</span>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <MapPin className="w-4 h-4" />
-                  <span>{destination.region}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Clock className="w-4 h-4" />
-                  <span>{destination.duration}</span>
+                <div className="flex items-center">
+                  <Star className="h-4 w-4 mr-1 fill-yellow-400 text-yellow-400" />
+                  <span>{averageRating} ({destinationReviews.length} reviews)</span>
                 </div>
               </div>
-              <p className="text-lg leading-relaxed">{destination.description}</p>
             </div>
 
-            {/* Detailed Description */}
-            {destination.longDescription && (
-              <div className="mb-8">
-                <h2 className="text-2xl font-bold mb-4">About This Destination</h2>
-                <p className="text-muted-foreground leading-relaxed mb-6">
-                  {destination.longDescription}
+            {/* Description */}
+            <Card>
+              <CardHeader>
+                <CardTitle>About This Destination</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground leading-relaxed">
+                  {destination.description}
                 </p>
-              </div>
-            )}
+              </CardContent>
+            </Card>
 
-            {/* Highlights */}
-            {destination.highlights && destination.highlights.length > 0 && (
-              <div className="mb-8">
-                <h2 className="text-2xl font-bold mb-4">What You'll Experience</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {destination.highlights.map((highlight, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
-                      <span>{highlight}</span>
-                    </div>
-                  ))}
+            {/* Details */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Travel Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center">
+                  <Clock className="h-5 w-5 mr-3 text-primary" />
+                  <div>
+                    <p>Best Time to Visit</p>
+                    <p className="text-sm text-muted-foreground">{destination.best_time_to_visit}</p>
+                  </div>
                 </div>
-              </div>
-            )}
+                <div className="flex items-center">
+                  <Calendar className="h-5 w-5 mr-3 text-primary" />
+                  <div>
+                    <p>Price</p>
+                    <p className="text-sm text-muted-foreground">${destination.price_per_night} per night</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-            {/* Comments Section */}
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold mb-6">Traveler Reviews</h2>
-              
-              {/* Add Comment */}
-              {user ? (
-                hasVisited ? (
-                  <Card className="mb-6">
-                    <CardHeader>
-                      <CardTitle className="text-lg">Share Your Experience</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium mb-2">Rating</label>
-                        <div className="flex items-center space-x-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              onClick={() => setNewRating(star)}
-                              className={`p-1 cursor-pointer ${star <= newRating ? 'text-yellow-400' : 'text-gray-300'}`}
-                            >
-                              <Star className={`w-5 h-5 ${star <= newRating ? 'fill-current' : ''}`} />
-                            </button>
+            {/* Reviews */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Reviews ({destinationReviews.length})</CardTitle>
+                  {!showReviewForm && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (!user) {
+                          toast.error('Please login to write a review');
+                          navigate('/login', { state: { from: `/destinations/${destinationId}` } });
+                        } else {
+                          setShowReviewForm(true);
+                        }
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Write Review
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {/* Review Form */}
+                {showReviewForm && user && (
+                  <div className="mb-6 p-4 border border-border rounded-lg bg-accent/50">
+                    <h4 className="mb-4">Write Your Review</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm mb-2">Rating</p>
+                        <div className="flex items-center gap-2">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-6 w-6 cursor-pointer transition-colors ${
+                                i < reviewRating
+                                  ? 'fill-yellow-400 text-yellow-400'
+                                  : 'text-gray-300 hover:text-yellow-200'
+                              }`}
+                              onClick={() => setReviewRating(i + 1)}
+                            />
                           ))}
-                          <span className="ml-2 text-sm text-muted-foreground">({newRating} stars)</span>
                         </div>
                       </div>
-                      <Textarea
-                        placeholder="Tell other travelers about your experience..."
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        className="mb-4"
-                      />
-                      <Button 
-                        onClick={handleSubmitComment} 
-                        disabled={!newComment.trim() || isSubmittingComment}
-                        className="cursor-pointer"
-                      >
-                        {isSubmittingComment ? (
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        ) : (
-                          <Send className="w-4 h-4 mr-2" />
-                        )}
-                        Post Review
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card className="mb-6 border-orange-200 bg-orange-50/50">
-                    <CardContent className="pt-6">
-                      <div className="flex items-start space-x-3">
-                        <AlertCircle className="w-5 h-5 text-orange-500 mt-0.5" />
-                        <div>
-                          <p className="font-medium text-orange-800 mb-1">
-                            Reviews from verified travelers only
-                          </p>
-                          <p className="text-sm text-orange-700">
-                            Book and complete a trip with TravelQuest to share your authentic experience and help other travelers.
-                          </p>
-                        </div>
+                      <div>
+                        <p className="text-sm mb-2">Your Review</p>
+                        <Textarea
+                          value={reviewComment}
+                          onChange={(e) => setReviewComment(e.target.value)}
+                          placeholder="Share your experience..."
+                          rows={4}
+                        />
                       </div>
-                    </CardContent>
-                  </Card>
-                )
-              ) : (
-                <Card className="mb-6">
-                  <CardContent className="pt-6">
-                    <p className="text-muted-foreground text-center">
-                      <span>Sign in to book trips and share your travel experiences</span>
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setShowReviewForm(false);
+                            setReviewComment('');
+                            setReviewRating(5);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            if (!reviewComment.trim()) {
+                              toast.error('Please write a review');
+                              return;
+                            }
+                            toast.success('Review submitted! It will be visible after admin approval.');
+                            setShowReviewForm(false);
+                            setReviewComment('');
+                            setReviewRating(5);
+                          }}
+                          disabled={!reviewComment.trim()}
+                          className="cursor-pointer"
+                        >
+                          Submit Review
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-              {/* Comments List */}
-              {isLoadingComments ? (
-                <div className="text-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-                  <p className="text-muted-foreground">Loading reviews...</p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {comments.map((comment) => (
-                    <Card key={comment.id}>
-                      <CardContent className="pt-6">
-                        <div className="flex items-start space-x-4">
+                {/* Reviews List */}
+                {destinationReviews.length > 0 ? (
+                  <div className="space-y-6">
+                    {destinationReviews.map((review) => (
+                      <div key={review.id} className="border-b border-border last:border-0 pb-6 last:pb-0">
+                        <div className="flex items-start gap-4">
                           <Avatar>
                             <AvatarFallback>
-                              {getUserInitials(comment.userName)}
+                              {review.user_name.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <span className="font-medium">{comment.userName || 'Anonymous User'}</span>
-                              {comment.rating && (
-                                <div className="flex items-center">
-                                  {[...Array(Math.max(1, Math.min(5, comment.rating)))].map((_, i) => (
-                                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                  ))}
-                                </div>
-                              )}
-                              <span className="text-sm text-muted-foreground">
-                                {formatDate(comment.date || comment.created_at || '')}
-                              </span>
+                            <div className="flex items-center justify-between mb-2">
+                              <p>{review.user_name}</p>
+                              <div className="flex items-center">
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`h-4 w-4 ${
+                                      i < review.rating
+                                        ? 'fill-yellow-400 text-yellow-400'
+                                        : 'text-gray-300'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
                             </div>
-                            <p className="text-muted-foreground">{comment.comment}</p>
+                            <p className="text-muted-foreground mb-2">{review.comment}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(review.date).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </p>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                  
-                  {comments.length === 0 && (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">
-                        No reviews yet. Book a trip to be the first to share your experience!
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-8">
+                    No reviews yet. Be the first to review this destination!
+                  </p>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Sidebar */}
+          {/* Booking Sidebar */}
           <div className="lg:col-span-1">
-            {/* Booking Card */}
-            <Card className="sticky top-32 mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Book Your Trip</span>
-                  <span className="text-2xl font-bold text-primary">{destination.price}</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {user ? (
-                  <BookingForm 
-                    destinationId={destination.id}
-                    destinationName={destination.name}
-                    price={destination.price}
-                    onBookingSuccess={() => {
-                      // Refresh the visit status after booking
-                      setTimeout(() => checkUserVisit(), 1000);
-                    }}
-                  />
-                ) : (
-                  <div className="text-center">
-                    <p className="text-muted-foreground mb-4">
-                      Sign in to book this amazing destination
-                    </p>
-                    <Button className="w-full cursor-pointer" size="lg" onClick={() => {
-                      // This would typically trigger a sign-in modal
-                      toast.info('Please sign in to book trips');
-                    }}>
-                      Sign In to Book
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Trip Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Trip Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {destination.bestTime && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Best time to visit</span>
-                    <span>{destination.bestTime}</span>
-                  </div>
-                )}
-                {destination.difficulty && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Difficulty level</span>
-                    <span>{destination.difficulty}</span>
-                  </div>
-                )}
-                {destination.groupSize && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Group size</span>
-                    <span>{destination.groupSize}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Duration</span>
-                  <span>{destination.duration}</span>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="sticky top-20">
+              <BookingForm
+                destinationId={destination.id}
+                destinationName={destination.title}
+                price={destination.price_per_night.toString()}
+                maxGuests={50}
+                onBookingSuccess={() => {}}
+              />
+            </div>
           </div>
         </div>
       </div>

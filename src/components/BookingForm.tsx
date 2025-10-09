@@ -1,21 +1,26 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Calendar, Users, CheckCircle, Loader2 } from 'lucide-react';
-import { post } from '../utils/api';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
+import { Calendar, Users, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '../utils/authContext';
 
 interface BookingFormProps {
   destinationId: string;
   destinationName: string;
   price: string;
+  maxGuests?: number;
   onBookingSuccess: () => void;
 }
 
-export function BookingForm({ destinationId, destinationName, price, onBookingSuccess }: BookingFormProps) {
+export function BookingForm({ destinationId, destinationName, price, maxGuests = 50, onBookingSuccess }: BookingFormProps) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
@@ -65,12 +70,32 @@ export function BookingForm({ destinationId, destinationName, price, onBookingSu
       return false;
     }
 
-    if (guestCount > 50) {
-      toast.error('Maximum of 50 guests allowed per trip');
+    if (guestCount > Math.min(maxGuests, 50)) {
+      toast.error(`Maximum of ${Math.min(maxGuests, 50)} guests allowed per trip`);
       return false;
     }
 
     return true;
+  };
+
+  const calculateTotalPrice = () => {
+    if (!formData.checkIn || !formData.checkOut) return 0;
+    
+    const checkInDate = new Date(formData.checkIn);
+    const checkOutDate = new Date(formData.checkOut);
+    const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    return nights * parseFloat(price);
+  };
+
+  const handleReserveClick = () => {
+    // Check if user is logged in
+    if (!user) {
+      toast.error('Please login to make a booking');
+      navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
+    setIsOpen(true);
   };
 
   const handleBooking = async () => {
@@ -81,159 +106,196 @@ export function BookingForm({ destinationId, destinationName, price, onBookingSu
     try {
       setIsLoading(true);
       
-      const bookingData = {
-        checkIn: formData.checkIn,
-        checkOut: formData.checkOut,
-        guests: formData.guests
-      };
-
-      await post(`/destinations/${destinationId}/book`, bookingData);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const totalPrice = calculateTotalPrice();
+      
+      // Show success
       setBookingSuccess(true);
-      toast.success('Trip booked successfully!');
+      toast.success('Booking confirmed! Check your email for details.');
       onBookingSuccess();
       
-      // Reset form after success
+      // Reset form after delay
       setTimeout(() => {
         setIsOpen(false);
         setBookingSuccess(false);
-        setFormData({ checkIn: '', checkOut: '', guests: '2' });
-      }, 2000);
-
+        setFormData({
+          checkIn: '',
+          checkOut: '',
+          guests: '2'
+        });
+      }, 3000);
+      
     } catch (error) {
-      console.error('Error booking trip:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to book trip');
+      console.error('Booking error:', error);
+      toast.error('Failed to complete booking. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const getTodayDate = () => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  };
-
-  const getMaxCheckoutDate = () => {
-    if (!formData.checkIn) return '';
-    const checkInDate = new Date(formData.checkIn);
-    const maxDate = new Date(checkInDate);
-    maxDate.setDate(maxDate.getDate() + 30); // 30 days max
-    return maxDate.toISOString().split('T')[0];
-  };
-
-  const tripDuration = formData.checkIn && formData.checkOut 
+  const totalPrice = calculateTotalPrice();
+  const nights = formData.checkIn && formData.checkOut
     ? Math.ceil((new Date(formData.checkOut).getTime() - new Date(formData.checkIn).getTime()) / (1000 * 60 * 60 * 24))
     : 0;
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button size="lg" className="w-full cursor-pointer">
-          <Calendar className="w-4 h-4 mr-2" />
-          Book This Trip
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Book Your Trip to {destinationName}</DialogTitle>
-          <DialogDescription>
-            Select your travel dates and number of guests to book your adventure.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Book Your Stay</span>
+            <span className="text-primary">${price}/night</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="checkIn" className="flex items-center mb-2">
+              <Calendar className="h-4 w-4 mr-2" />
+              Check-in Date
+            </Label>
+            <Input
+              id="checkIn"
+              type="date"
+              value={formData.checkIn}
+              onChange={(e) => handleInputChange('checkIn', e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
+            />
+          </div>
 
-        {bookingSuccess ? (
-          <div className="text-center py-8">
-            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Booking Confirmed!</h3>
-            <p className="text-muted-foreground">
-              Your trip has been successfully booked. You'll be able to leave a review after your visit.
+          <div>
+            <Label htmlFor="checkOut" className="flex items-center mb-2">
+              <Calendar className="h-4 w-4 mr-2" />
+              Check-out Date
+            </Label>
+            <Input
+              id="checkOut"
+              type="date"
+              value={formData.checkOut}
+              onChange={(e) => handleInputChange('checkOut', e.target.value)}
+              min={formData.checkIn || new Date().toISOString().split('T')[0]}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="guests" className="flex items-center mb-2">
+              <Users className="h-4 w-4 mr-2" />
+              Number of Guests
+            </Label>
+            <Input
+              id="guests"
+              type="number"
+              min="1"
+              max={Math.min(maxGuests, 50)}
+              value={formData.guests}
+              onChange={(e) => handleInputChange('guests', e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Maximum {Math.min(maxGuests, 50)} guests per booking
             </p>
           </div>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Trip Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="checkIn">Check-in Date</Label>
-                  <Input
-                    id="checkIn"
-                    type="date"
-                    value={formData.checkIn}
-                    min={getTodayDate()}
-                    onChange={(e) => handleInputChange('checkIn', e.target.value)}
-                    className="cursor-pointer"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="checkOut">Check-out Date</Label>
-                  <Input
-                    id="checkOut"
-                    type="date"
-                    value={formData.checkOut}
-                    min={formData.checkIn || getTodayDate()}
-                    max={getMaxCheckoutDate()}
-                    onChange={(e) => handleInputChange('checkOut', e.target.value)}
-                    className="cursor-pointer"
-                  />
-                </div>
+
+          {totalPrice > 0 && (
+            <div className="pt-4 border-t border-border">
+              <div className="flex justify-between mb-2">
+                <span className="text-muted-foreground">${price} × {nights} nights</span>
+                <span>${totalPrice}</span>
               </div>
-
-              <div>
-                <Label htmlFor="guests">Number of Guests (Max 50)</Label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    id="guests"
-                    type="number"
-                    min="1"
-                    max="50"
-                    value={formData.guests}
-                    onChange={(e) => handleInputChange('guests', e.target.value)}
-                    className="pl-10 cursor-pointer"
-                  />
-                </div>
+              <div className="flex justify-between">
+                <span>Total</span>
+                <span className="text-primary">${totalPrice}</span>
               </div>
+            </div>
+          )}
 
-              <div className="border-t pt-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span>Price per night:</span>
-                  <span className="font-semibold">{price}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm text-muted-foreground">
-                  <span>Guests: {formData.guests}</span>
-                  {tripDuration > 0 && (
-                    <span className={tripDuration > 30 ? 'text-destructive font-medium' : ''}>
-                      {tripDuration} {tripDuration === 1 ? 'night' : 'nights'}
-                      {tripDuration > 30 && ' (Max: 30)'}
-                    </span>
-                  )}
-                </div>
+          <Button
+            onClick={handleReserveClick}
+            disabled={!formData.checkIn || !formData.checkOut || !formData.guests}
+            className="w-full cursor-pointer"
+          >
+            Reserve Now
+          </Button>
+
+          <p className="text-xs text-center text-muted-foreground">
+            You won't be charged yet
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Booking Confirmation Dialog */}
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {bookingSuccess ? 'Booking Confirmed!' : 'Confirm Your Booking'}
+            </DialogTitle>
+            <DialogDescription>
+              {bookingSuccess 
+                ? 'Your reservation has been successfully confirmed.'
+                : 'Review your booking details before confirming.'
+              }
+            </DialogDescription>
+          </DialogHeader>
+
+          {bookingSuccess ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
-
-              <Button 
-                onClick={handleBooking} 
-                disabled={isLoading}
-                className="w-full cursor-pointer"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Booking...
-                  </>
-                ) : (
-                  'Confirm Booking'
-                )}
-              </Button>
-
-              <p className="text-xs text-muted-foreground text-center">
-                This is a demo booking. No actual payment will be processed.
+              <p className="mb-4">Confirmation email sent!</p>
+              <p className="text-sm text-muted-foreground">
+                Booking reference: TQ-{Date.now().toString().slice(-6)}
               </p>
-            </CardContent>
-          </Card>
-        )}
-      </DialogContent>
-    </Dialog>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-accent/50 p-4 rounded-lg space-y-2">
+                <h4>{destinationName}</h4>
+                <div className="text-sm space-y-1 text-muted-foreground">
+                  <p>Check-in: {formData.checkIn ? new Date(formData.checkIn).toLocaleDateString() : '-'}</p>
+                  <p>Check-out: {formData.checkOut ? new Date(formData.checkOut).toLocaleDateString() : '-'}</p>
+                  <p>Guests: {formData.guests}</p>
+                  <p>Nights: {nights}</p>
+                </div>
+              </div>
+
+              <div className="border-t border-border pt-4">
+                <div className="flex justify-between mb-2">
+                  <span>${price} × {nights} nights</span>
+                  <span>${totalPrice}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Total</span>
+                  <span className="text-primary">${totalPrice}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsOpen(false)}
+                  disabled={isLoading}
+                  className="flex-1 cursor-pointer"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleBooking}
+                  disabled={isLoading}
+                  className="flex-1 cursor-pointer"
+                >
+                  {isLoading ? 'Processing...' : 'Confirm Booking'}
+                </Button>
+              </div>
+
+              <p className="text-xs text-center text-muted-foreground">
+                This is a demo. No actual booking will be made.
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

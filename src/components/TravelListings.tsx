@@ -1,66 +1,29 @@
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { Search, Star, Clock, Loader2 } from 'lucide-react';
-import { get } from '../utils/api';
+import { Search, MapPin, Star, Clock } from 'lucide-react';
+import { destinations } from '../utils/staticData';
 
-interface TravelListingsProps {
-  readonly onDestinationSelect: (destinationId: string) => void;
-}
+const categories = ['All', 'Adventure', 'Cultural', 'Nature', 'Beach', 'City', 'Historical', 'Wildlife', 'Luxury'];
+const regions = ['All', 'NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'NT', 'ACT'];
 
-interface Destination {
-  id: string;
-  name: string;
-  description: string;
-  images: string[];
-  rating: number;
-  reviews: number;
-  category: string;
-  region: string;
-  duration: string;
-  price: string;
-}
-
-const categories = ['All', 'Adventure', 'Cultural', 'Romantic', 'Beach', 'Food'];
-const regions = ['All', 'Europe', 'Asia', 'North America', 'South America', 'Africa'];
-
-export function TravelListings({ onDestinationSelect }: TravelListingsProps) {
-  const [destinations, setDestinations] = useState<Destination[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export function TravelListings() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedRegion, setSelectedRegion] = useState('All');
-  const [sortBy, setSortBy] = useState('rating');
-
-  const fetchDestinations = async () => {
-    try {
-      setIsLoading(true);
-      const data = await get('/destinations', { 
-        region: selectedRegion !== 'All' ? selectedRegion : undefined, 
-        category: selectedCategory !== 'All' ? selectedCategory : undefined 
-      });
-      setDestinations(data.destinations || data || []);
-    } catch (err) {
-      console.error('Error fetching destinations:', err);
-      setError('Failed to load destinations. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDestinations();
-  }, [selectedCategory, selectedRegion]);
+  const [sortBy, setSortBy] = useState('newest');
 
   const filteredDestinations = destinations
     .filter(dest => {
-      const matchesSearch = dest.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          dest.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = dest.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          dest.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          dest.location.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'All' || dest.category === selectedCategory;
       const matchesRegion = selectedRegion === 'All' || dest.region === selectedRegion;
       
@@ -68,182 +31,199 @@ export function TravelListings({ onDestinationSelect }: TravelListingsProps) {
     })
     .sort((a, b) => {
       switch (sortBy) {
-        case 'rating':
-          return b.rating - a.rating;
-        case 'reviews':
-          return b.reviews - a.reviews;
+        case 'price-low':
+          return a.price_per_night - b.price_per_night;
+        case 'price-high':
+          return b.price_per_night - a.price_per_night;
         case 'name':
-          return a.name.localeCompare(b.name);
+          return a.title.localeCompare(b.title);
+        case 'newest':
         default:
-          return 0;
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       }
     });
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background py-8 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-              <p className="text-muted-foreground">Loading amazing destinations...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background py-8 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <p className="text-destructive mb-4">{error}</p>
-              <Button onClick={fetchDestinations} className="cursor-pointer">Try Again</Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const getCategoryColor = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'adventure':
+        return 'bg-orange-500/90 text-white';
+      case 'cultural':
+        return 'bg-purple-500/90 text-white';
+      case 'nature':
+        return 'bg-green-500/90 text-white';
+      case 'beach':
+        return 'bg-blue-500/90 text-white';
+      case 'city':
+        return 'bg-gray-500/90 text-white';
+      case 'historical':
+        return 'bg-amber-500/90 text-white';
+      case 'wildlife':
+        return 'bg-emerald-500/90 text-white';
+      case 'luxury':
+        return 'bg-gold-500/90 text-white';
+      default:
+        return 'bg-slate-500/90 text-white';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">Explore Destinations</h1>
-          <p className="text-lg text-muted-foreground">
-            Discover amazing places around the world with our curated travel guides
+        <div className="mb-8 text-center">
+          <h1 className="mb-4">Explore Destinations</h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Discover amazing destinations across Australia. From pristine beaches to ancient rainforests, 
+            vibrant cities to cultural landmarks.
           </p>
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-card rounded-lg p-6 mb-8 shadow-sm border">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {/* Search */}
-            <div className="lg:col-span-2 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                placeholder="Search destinations..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 cursor-pointer"
-              />
+        <Card className="mb-8">
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Search destinations..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              {/* Filters */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">Category</label>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(cat => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">Region</label>
+                  <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {regions.map(region => (
+                        <SelectItem key={region} value={region}>{region}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block">Sort By</label>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="newest">Newest</SelectItem>
+                      <SelectItem value="price-low">Price: Low to High</SelectItem>
+                      <SelectItem value="price-high">Price: High to Low</SelectItem>
+                      <SelectItem value="name">Name: A to Z</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setSelectedCategory('All');
+                      setSelectedRegion('All');
+                      setSortBy('newest');
+                    }}
+                    className="w-full cursor-pointer"
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              </div>
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Category Filter */}
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger>
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map(category => (
-                  <SelectItem key={category} value={category}>{category}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Region Filter */}
-            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-              <SelectTrigger>
-                <SelectValue placeholder="Region" />
-              </SelectTrigger>
-              <SelectContent>
-                {regions.map(region => (
-                  <SelectItem key={region} value={region}>{region}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Sort */}
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="rating">Highest Rated</SelectItem>
-                <SelectItem value="reviews">Most Reviews</SelectItem>
-                <SelectItem value="name">Name A-Z</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Results Count */}
+        <div className="mb-4 text-muted-foreground">
+          Showing {filteredDestinations.length} {filteredDestinations.length === 1 ? 'destination' : 'destinations'}
         </div>
 
-        {/* Results */}
-        <div className="flex justify-between items-center mb-6">
-          <p className="text-muted-foreground">
-            {filteredDestinations.length} destination{filteredDestinations.length !== 1 ? 's' : ''} found
-          </p>
-        </div>
-
-        {/* Destination Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredDestinations.map((destination) => (
-            <Card 
-              key={destination.id} 
-              className="group cursor-pointer hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1"
-              onClick={() => onDestinationSelect(destination.id)}
-            >
-              <CardContent className="p-0">
-                <div className="relative overflow-hidden rounded-t-lg">
-                  <ImageWithFallback
-                    src={destination.images[0] || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600&h=400&fit=crop'}
-                    alt={destination.name}
-                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <Badge className="absolute top-4 left-4 bg-white/90 text-black">
-                    {destination.category}
-                  </Badge>
-                  <Badge className="absolute top-4 right-4 bg-black/80 text-white">
-                    {destination.region}
-                  </Badge>
-                </div>
-                
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-bold text-lg">{destination.name}</h3>
-                    <div className="flex items-center space-x-1">
-                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-medium">{destination.rating}</span>
-                    </div>
+        {/* Destinations Grid */}
+        {filteredDestinations.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredDestinations.map((destination) => (
+              <Card 
+                key={destination.id} 
+                className="group cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                onClick={() => navigate(`/destinations/${destination.id}`)}
+              >
+                <CardContent className="p-0">
+                  <div className="relative overflow-hidden rounded-t-lg">
+                    <ImageWithFallback
+                      src={destination.image_url}
+                      alt={destination.title}
+                      className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <Badge className={`absolute top-4 left-4 ${getCategoryColor(destination.category)}`}>
+                      {destination.category}
+                    </Badge>
                   </div>
                   
-                  <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                    {destination.description}
-                  </p>
-                  
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center text-muted-foreground">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3>{destination.title}</h3>
+                      <div className="flex items-center space-x-1">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm">4.8</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center text-muted-foreground mb-3">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      <span className="text-sm">{destination.location}</span>
+                    </div>
+                    
+                    <p className="text-muted-foreground mb-4 line-clamp-2 text-sm">
+                      {destination.description}
+                    </p>
+
+                    <div className="flex items-center text-muted-foreground text-sm mb-4">
                       <Clock className="w-4 h-4 mr-1" />
-                      <span>{destination.duration}</span>
+                      <span>Best: {destination.best_time_to_visit}</span>
                     </div>
-                    <span className="text-muted-foreground">
-                      {destination.reviews} reviews
-                    </span>
+                    
+                    <div className="flex items-center justify-between pt-4 border-t border-border">
+                      <span className="text-primary">
+                        ${destination.price_per_night}/night
+                      </span>
+                      <Button size="sm" className="cursor-pointer">
+                        View Details
+                      </Button>
+                    </div>
                   </div>
-                  
-                  <div className="flex items-center justify-between mt-4">
-                    <span className="font-semibold text-primary">{destination.price}</span>
-                    <Button size="sm" variant="outline" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      View Details
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* No Results */}
-        {filteredDestinations.length === 0 && destinations.length > 0 && (
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
           <div className="text-center py-12">
-            <p className="text-lg text-muted-foreground mb-4">
-              No destinations found matching your criteria
-            </p>
-            <Button 
+            <p className="text-muted-foreground mb-4">No destinations found matching your criteria.</p>
+            <Button
               onClick={() => {
                 setSearchTerm('');
                 setSelectedCategory('All');
