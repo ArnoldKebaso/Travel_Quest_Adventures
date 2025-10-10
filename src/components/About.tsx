@@ -1,4 +1,4 @@
-import React from 'react';
+// React value not needed with the new JSX transform
 import { Card, CardContent } from './ui/card';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Award, Users, Globe, Heart, Shield, Compass } from 'lucide-react';

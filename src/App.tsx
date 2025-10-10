@@ -1,4 +1,4 @@
-import React from 'react';
+// React value not needed with the new JSX transform
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './utils/authContext';
 import { Home } from './components/Home';

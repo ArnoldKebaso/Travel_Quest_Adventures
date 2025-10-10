@@ -1,4 +1,4 @@
-import React from 'react';
+// React value not needed with the new JSX transform
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react';
 
 export function Footer() {

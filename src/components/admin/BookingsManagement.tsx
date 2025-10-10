@@ -4,7 +4,7 @@ import { Button } from '../ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { toast } from 'sonner';
-import { bookings as initialBookings, Booking } from '../../utils/staticData';
+import { bookings as initialBookings, type Booking } from '../../utils/staticData';
 import { Calendar, Eye, CheckCircle, XCircle, Mail, Phone, User } from 'lucide-react';
 import { Badge } from '../ui/badge';
 

@@ -7,7 +7,7 @@ import { Textarea } from '../ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { toast } from 'sonner';
-import { destinations as initialDestinations, Destination } from '../../utils/staticData';
+import { destinations as initialDestinations, type Destination } from '../../utils/staticData';
 import { Plus, Pencil, Trash2, MapPin } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 

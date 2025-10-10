@@ -1,4 +1,4 @@
-import React from 'react';
+// React value not needed with the new JSX transform
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';

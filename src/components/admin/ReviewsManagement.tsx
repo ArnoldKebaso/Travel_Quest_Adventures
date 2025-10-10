@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Button } from '../ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { toast } from 'sonner';
-import { reviews as initialReviews, Review, destinations } from '../../utils/staticData';
+import { reviews as initialReviews, type Review, destinations } from '../../utils/staticData';
 import { Star, CheckCircle, XCircle } from 'lucide-react';
 import { Badge } from '../ui/badge';
 
