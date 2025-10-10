@@ -8,6 +8,7 @@ import { tours } from '../utils/staticData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { useAuth } from '../utils/authContext';
 import { toast } from 'sonner';
+import { TourBookingForm } from './TourBookingForm';
 
 const categories = ['All', 'Adventure', 'Cultural', 'Wildlife', 'Food & Wine', 'Nature'];
 const difficulties = ['All', 'Easy', 'Moderate', 'Challenging'];
@@ -17,6 +18,7 @@ export function Tours() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedDifficulty, setSelectedDifficulty] = useState('All');
   const [selectedTour, setSelectedTour] = useState<typeof tours[0] | null>(null);
+  const [bookingTour, setBookingTour] = useState<typeof tours[0] | null>(null);
 
   const filteredTours = tours.filter(tour => {
     const categoryMatch = selectedCategory === 'All' || tour.category === selectedCategory;
@@ -198,11 +200,7 @@ export function Tours() {
                   <Button 
                     className="flex-1 cursor-pointer"
                     onClick={() => {
-                      if (!user) {
-                        toast.error('Please login to book a tour');
-                      } else {
-                        toast.success('Booking feature coming soon!');
-                      }
+                      setBookingTour(selectedTour);
                     }}
                   >
                     Book Now
@@ -214,6 +212,18 @@ export function Tours() {
           )}
         </DialogContent>
       </Dialog>
+      {bookingTour && (
+        <TourBookingForm
+          tourId={bookingTour.id}
+          tourTitle={bookingTour.title}
+          price={bookingTour.price}
+          maxGroupSize={bookingTour.max_group_size}
+          open={!!bookingTour}
+          onOpenChange={(open) => {
+            if (!open) setBookingTour(null);
+          }}
+        />
+      )}
     </div>
   );
 }
