@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Button } from './ui/button';
 import { LogOut, LayoutDashboard, MapPin, Compass, FileText, Star, Calendar } from 'lucide-react';

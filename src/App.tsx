@@ -12,6 +12,7 @@ import { Profile } from './components/Profile';
 import { Navigation } from './components/Navigation';
 import { Footer } from './components/Footer';
 import { Login } from './components/Login';
+import { Signup } from './components/Signup';
 import { AdminPanel } from './components/AdminPanel';
 import { Toaster } from './components/ui/sonner';
 
@@ -58,9 +59,6 @@ function AppContent() {
         } 
       />
       
-      {/* Public Routes with Layout */}
-      <Route path="/login" element={<Login />} />
-      
       {/* Routes with Navigation and Footer */}
       <Route path="/*" element={
         <div className="min-h-screen bg-background">
@@ -74,6 +72,8 @@ function AppContent() {
               <Route path="/blogs" element={<Blogs />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
               <Route 
                 path="/profile" 
                 element={

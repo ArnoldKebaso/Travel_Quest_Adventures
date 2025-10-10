@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -102,6 +102,13 @@ export function Login() {
             </Button>
           </form>
           
+          <div className="mt-6 text-sm text-center">
+            Don't have an account?{' '}
+            <Link to="/signup" className="text-primary underline-offset-4 hover:underline">
+              Sign up
+            </Link>
+          </div>
+
           <div className="mt-6 p-4 bg-blue-50 rounded-lg space-y-2">
             <p className="text-sm text-gray-600">Demo Credentials:</p>
             <div className="space-y-1 text-sm">

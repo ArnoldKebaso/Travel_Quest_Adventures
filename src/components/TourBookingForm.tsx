@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -82,7 +82,7 @@ export function TourBookingForm({
   };
 
   const calculateTotalPrice = () => {
-    const basePrice = parseFloat(price);
+  const basePrice = parseFloat(String(price));
     const guests = parseInt(formData.guests) || 0;
     return basePrice * guests;
   };

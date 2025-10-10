@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { destinations, tours, blogs, reviews, bookings } from '../../utils/staticData';
 import { MapPin, Compass, FileText, Star, Calendar, DollarSign, Users, TrendingUp } from 'lucide-react';
